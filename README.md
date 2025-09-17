@@ -1,4 +1,4 @@
-![Logo](PinionProject_Icon.png "Project Pinion")
+<img src="PinionProject_Icon.png" alt="drawing" width="200"/>
 
 # Project Pinion 
 Project Pinion began with the objective of finding a replacement for the Stepper Motor controllers used on all SAFL/NCED data carriages. SAFL/NCED carriages used Parker Zeta CompuMotors (6104 and 6108 typically) to power and controll the stepper motors that move the carriages. Parker has long since discontinued the Zeta line leaving SAFL staff to purchase replacements from eBay. Project Pinion was intended to develop a drop-in replacement for the Zetas that could power the steppers and receive/parse the same serial commands that the NCED carts use to tell the Zetas where to go. Zetas have become the most frequently failed component on carts, so a replacement would go a long way to extend the life of the existing fleet of carts. 
