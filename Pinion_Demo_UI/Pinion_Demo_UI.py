@@ -17,7 +17,7 @@ def main():
     #if moving:
         # x_jog_buttons.update_current_pos()
     
-    gui.window.after(250,main)
+    gui.window.after(250,main) # Rerun again after 250 milliseconds
 
 
 main()
