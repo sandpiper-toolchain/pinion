@@ -1,0 +1,19 @@
+Programming-Tool - Settings for DFS60B
+
+Filename:  SickEncoderSettings.txt
+Date:      15.12.10  2:02:12 PM
+
+Username:  SAFL
+Company:   Exxon
+Comment:   Sick programmable encoder settomgs 12-15-10
+
+------------------------------------------------------------
+
+Encoder:                DFS60B   
+Ident number:           1036797
+Type:                   DFS60B-BBPM10000
+DateCode:               1048-0612
+
+Number of steps:        1500
+Electrical interface:   HTL / pushpull
+Zero pulse width:       90°, gated with channel A and B
