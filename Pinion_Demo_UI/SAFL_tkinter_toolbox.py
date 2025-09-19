@@ -760,7 +760,8 @@ class radio_buttons():
         return self.selected
 
 class jog_buttons():
-    def __init__(self,container,title):
+    def __init__(self,container,title,enter_button_action):
+        self.enter_button_action = enter_button_action
         self.title = title
         self.frame = tk.Frame(container)
         self.frame.pack(fill=tk.X)
@@ -784,8 +785,10 @@ class jog_buttons():
         
 
     def update_current_pos(self,new_pos):
+        self.current_value.config(state='normal')
         self.current_value.delete(0,tk.END)
         self.current_value.insert(0,new_pos)
+        self.current_value.config(state='disabled')
 
     def enable_disable(self,state:bool):
         if state:
@@ -800,6 +803,8 @@ class jog_buttons():
         value = self.current_value.get()
         # print(f'{self.title} Entry is: {value}')
         self.update_target_pos(value)
+
+        self.enter_button_action(float(value))
 
 class splash_screen():
     def __init__(self):
