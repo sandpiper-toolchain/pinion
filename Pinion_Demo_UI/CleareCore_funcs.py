@@ -10,12 +10,20 @@ class clearcore():
             print(f'Error Opening COM Port for Teknic ClearCore: {e}')
             self.com = ''
 
+        self.travel_vel = 100
+        self.jog_vel    = 5
+        self.scan_vel   = 30
+
+        self.target = 0
         
 
         self.units = units
         self.send_command('echo0')
         self.send_command('verbose0') # turn off Verbose Response
+        self.send_command('ma1') # put the controller into absolute position mode. 
         self.scaler = {'m':1000,'mm':1} # GUI will always display in mm, but sometimes the motor controller is configured in meters. 
+
+        self.set_velocity(self.travel_vel)
 
         self.AtTargetPos                 = -999
         self.StepsActive                 = -999
@@ -82,6 +90,14 @@ class clearcore():
             print(f'Error Refreshing Position: {e}')
             self.position = float('nan')
 
+    def home_axis(self):
+        self.jog(-5) # mm/s
+
+        self.poll_status()
+        while bool(self.StepsActive):
+            print(self.InNegativeLimit)
+            self.poll_status()
+
 
     def enable(self):
         self.send_command(f'drive1')
@@ -91,14 +107,21 @@ class clearcore():
         self.send_command(f'drive0')
 
     def move_to_absolute_position(self,target):
-        # self.send_command('ma1')
+        self.send_command('ma1')
         command = f'd{target/self.scaler[self.units]:0.4f}'
         self.send_command(command)
         self.send_command('go')
 
-    def velocity_move(self,vel):
+    def relative_move(self, dist): 
+        self.send_command('ma0')
+        command = f'd{dist/self.scaler[self.units]:0.4f}'
+        self.send_command(command)
+        self.send_command('go')
+
+    def jog(self,vel):
         command = f'jog {vel/self.scaler[self.units]:.4f}'
         self.send_command(command)
+        # self.send_command('ma1') # put the controller back into absolute positioning mode. 
 
     def stop_motion(self):
         command = f's'
@@ -208,14 +231,8 @@ if __name__ == '__main__':
 
     x_axis.poll_status()
     x_axis.enable()
-    x_axis.set_velocity(200)
+    x_axis.set_velocity(50)
 
-    print(f"x_axis Position: {x_axis.position:.4f}")
+    x_axis.home_axis()
 
-    target = float(input('Enter Target Position (m): '))
 
-    x_axis.move_to_absolute_position(target)
-
-    x_axis.wait_for_HLFB()
-
-    x_axis.disable()

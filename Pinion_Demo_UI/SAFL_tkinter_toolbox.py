@@ -760,8 +760,12 @@ class radio_buttons():
         return self.selected
 
 class jog_buttons():
-    def __init__(self,container,title,enter_button_action):
+    def __init__(self,container,title,enter_button_action,left_arrow_action,right_arrow_action,release_action):
         self.enter_button_action = enter_button_action
+        self.left_arrow_action = left_arrow_action
+        self.right_arrow_action = right_arrow_action
+        self.release_action = release_action
+        # self.jog_speed = jog_speed
         self.title = title
         self.frame = tk.Frame(container)
         self.frame.pack(fill=tk.X)
@@ -772,6 +776,8 @@ class jog_buttons():
 
         self.left_button = tk.Button(self.frame,text='\u2190',font=('Calibri',15,'bold')) # \u2190 is unicode Left Arrow
         self.left_button.pack(side=tk.LEFT)
+        self.left_button.bind("<ButtonPress-1>",self.left_arrow)
+        self.left_button.bind("<ButtonRelease-1>",self.button_released)
 
         self.current_value = tk.Entry(self.frame,font=('Calibri',11),width=25,bg='white',textvariable=self.entry_value)
         self.current_value.pack(side=tk.LEFT)
@@ -779,16 +785,20 @@ class jog_buttons():
 
         self.right_button = tk.Button(self.frame,text='\u2192',font=('Calibri',15,'bold')) # \u2192 is unicode Right Arrow.
         self.right_button.pack(side=tk.LEFT)
+        self.right_button.bind("<ButtonPress-1>",self.right_arrow)
+        self.right_button.bind("<ButtonRelease-1>",self.button_released)
 
-        self.target_value = tk.Label(self.frame,text='Target: ',font=('Calibri',11,'bold'))
-        self.target_value.pack(side=tk.LEFT)
+
+        self.current_pos = tk.Label(self.frame,text='Current Position: ',font=('Calibri',11,'bold'))
+        self.current_pos.pack(side=tk.LEFT)
         
 
     def update_current_pos(self,new_pos):
-        self.current_value.config(state='normal')
-        self.current_value.delete(0,tk.END)
-        self.current_value.insert(0,new_pos)
-        self.current_value.config(state='disabled')
+        # self.current_value.config(state='normal')
+        # self.current_value.delete(0,tk.END)
+        # self.current_value.insert(0,new_pos)
+        # self.current_value.config(state='disabled')
+        self.current_pos['text'] = f'Current Position: {new_pos:.1f} mm'
 
     def enable_disable(self,state:bool):
         if state:
@@ -796,15 +806,27 @@ class jog_buttons():
         else:
             self.current_value.config(state='disabled')
 
-    def update_target_pos(self,new_target):
-        self.target_value['text'] = f'Target: {new_target} mm'
+    # def update_target_pos(self,new_target):
+    #     self.target_value['text'] = f'Target: {new_target} mm'
 
     def enter_action(self,event):
         value = self.current_value.get()
         # print(f'{self.title} Entry is: {value}')
-        self.update_target_pos(value)
-
+        # self.update_target_pos(value)
         self.enter_button_action(float(value))
+
+    def left_arrow(self,event):
+        # print('Left arrow Pressed!')
+        self.left_arrow_action()
+
+    def right_arrow(self,event):
+        # print('right arrow pressed')
+        self.right_arrow_action()
+
+    def button_released(self,event):
+        # print('Button released!')
+        self.release_action()
+
 
 class splash_screen():
     def __init__(self):
