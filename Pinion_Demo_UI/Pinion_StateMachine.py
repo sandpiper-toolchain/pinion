@@ -12,6 +12,8 @@ States :
 3   : Moving to Absolute Position
 4.1 : Jogging -> Negative
 4.2 : Jogging -> Positive
+5.1 : Scanning: Collecting Data
+5.2 : Scanning: Traveling
 
 
 '''
@@ -19,13 +21,15 @@ States :
 import CleareCore_funcs 
 
 class state_machine():
-    def __init__(self,axis:CleareCore_funcs.clearcore): 
+    def __init__(self,axis:CleareCore_funcs.clearcore_motion,daq:CleareCore_funcs.clearcore_daq): 
         self.state = 0
         self.previous_state = 0
         self.axis = axis
+        self.daq = daq
         self.jog_speed = 5 # mm/s
+        self.data = []
 
-        self.state_desc = {0:"Disabled",1:"Standy (Motor Enabled)",2:"Homing",2.1:"Homing: Move to Limit",2.2:"Homing: Backing off",2.3:"Homing: Reapproach Limit",2.4:"Homing: Resetting Zero",3:"Moving to absolute position",4.1:"Jogging-Negative",4.2:"Jogging-Positive"}
+        self.state_desc = {0:"Disabled",1:"Standy (Motor Enabled)",2:"Homing",2.1:"Homing: Move to Limit",2.2:"Homing: Backing off",2.3:"Homing: Reapproach Limit",2.4:"Homing: Resetting Zero",3:"Moving to absolute position",4.1:"Jogging-Negative",4.2:"Jogging-Positive",5.1:"Scanning: Collecting Data",5.2:"Scanning: Traveling"}
 
     def check_state(self): 
         self.axis.poll_status()
@@ -59,6 +63,7 @@ class state_machine():
 
         elif self.state == 3 and self.previous_state != 3: 
             self.axis.move_to_absolute_position(self.axis.target)
+            self.daq.data = [] # clear the logged data array at the beginning of each positional move
         elif self.state == 3 and not bool(self.axis.StepsActive): # the move is done. 
             self.state = 1
 

@@ -14,6 +14,17 @@ The secondary objective was to evaluate the ClearCore controller from Teknic Inc
 - Ability to control up to 4 motors
 - 2 built in serial ports, a USB port that mounts as a serial port and an Ethernet port.
 
+## Hardware
+- [ClearCore Controller](https://teknic.com/products/io-motion-controller/clcr-4-13/): $105
+- [24VDC Power supply for ClearCore](https://www.digikey.com/en/products/detail/mean-well-usa-inc/EDR-150-24/7702916?s=N4IgTCBcDaILYFMCGA7A7ggNpgBAgJgE4C0AjAKwAMxYALCALoC%2BQA): $28
+- [24VDC Power Supply for Stepper Driver](https://www.automationdirect.com/adc/shopping/catalog/power_products_(electrical)/dc_power_supplies/din_rail_mount/psa-24-480?gad_source=1&gad_campaignid=20953271723&gbraid=0AAAAAD_dnO2VffSUTGvznwPlpUkJoiC-C&gclid=Cj0KCQjwrc7GBhCfARIsAHGcW5Xe-U910Uq-PU4GRA1UxyrAp2Yh0SfC4OmU_1m4hwasY5AI_vxdgxcaAi0OEALw_wcB): $118
+- [Stepper Motor Driver](https://www.automationdirect.com/adc/shopping/catalog/motion_control/stepper_systems/stepper_drives/em556s): $72
+- [NEMA 34 Stepper Motor](https://kimcontrols.com/n31hrfk-lek-m2-00-p39110.html?srsltid=AfmBOoroYrENgZtK7RUZUiVnYYOtOgPHscDyC-5_ZvKPrmxz_tBVD-cs): $456 (Other motors could be used. There's nothing special about this motor, its just the one I had.)
+- [NPN Proximity Switch](https://www.htmsensors.com/iqp2-1202n-b3u2f/?searchid=0&search_query=iqp2-1202n-) Used as limit switches. Other NPN or mechanical switches could be used.
+- [E-Stop Button. Momentary NC](https://www.mcmaster.com/7546K23/): $42
+- [Laser Distance Sensor Head: LK-500](https://www.keyence.com/products/measure/laser-1d/lk/models/lk-500/?search_dl=1): Discontinued (Any sensor with an analog output will work)
+- [Laser Distance Sensor Controller: LK-2000](https://www.keyence.com/products/measure/laser-1d/lk/models/lk-2000/?search_dl=1): Discontinued (Any sensor with an analog output will work)
+
 ## TeknicZeta_Stepper
 This folder contains files for the development of a ClearCore controller that can emulate a Zeta in controlling a single stepper on an existing SAFL/NCED Cart. The Arduino program files are located in the directory: `\pinion\TeknicZeta_Stepper\TeknicZeta`.
 

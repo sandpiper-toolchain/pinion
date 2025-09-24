@@ -462,6 +462,21 @@ class fwd_rev_stop_reset_buttons():
 
 
 class live_data_plot():
+    '''
+    At the beginning of the GUI program insert: 
+    plots = safl.live_data_plot(gui.frames['Plots'],500,2,'Motor Speed','RPM',['Motor 1 RPM','Motor 1 Command'])
+    plotdata = {'ts':'','data':[]}
+
+    In the looped part of the program:
+    plotdata['ts'] = datetime.datetime.now()
+    plotdata['data'] = [float(wheels.motor1_rpm),float(wheels.velocity_cmd_1)]
+
+    At the end of the program (after the looped part):
+    def update_plotting(i):
+        plots.update_plot(plotdata['ts'],plotdata['data'])
+    
+    ani1= animation.FuncAnimation(plots.figure,update_plotting,interval=250)
+    '''
     def __init__(self,container,buffersize,num_plots,title,ylabel,legend_lbls):
 
         self.data_sets = []
@@ -492,6 +507,31 @@ class live_data_plot():
 
         self.ax1.relim()
         self.ax1.autoscale_view()
+
+class xy_plot():
+    def __init__(self,container,title,xlabel,ylabel,legend_lbls):
+        self.dataset = [[float('nan'),float('nan')]]
+        self.figure = plt.Figure(figsize=(6,2.5), dpi=100)
+        self.ax1 = self.figure.add_subplot(111)
+        self.line1 = FigureCanvasTkAgg(self.figure, container)
+
+        self.l, = self.ax1.plot(*zip(*self.dataset))
+       
+        self.ax1.set_title(title)
+        self.ax1.set_ylabel(ylabel)
+        self.ax1.set_xlabel(xlabel)
+        self.ax1.grid()
+
+        self.lgnd = self.ax1.legend(legend_lbls,loc='upper left')
+
+        self.line1.get_tk_widget().pack(fill = tk.BOTH,expand = True)
+
+    def refresh_plot(self,data_array):
+        # print(data_array)
+        self.l.set_data(*zip(*data_array))
+        self.ax1.relim()
+        self.ax1.autoscale_view()
+
 
 class timestamp_looptime():
     def __init__(self,container):

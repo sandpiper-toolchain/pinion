@@ -1,7 +1,8 @@
 import serial
 import time
+import numpy as np
 
-class clearcore():
+class clearcore_motion():
     def __init__(self,com_port,baudrate,units):
         try: 
             self.com = serial.Serial(com_port,baudrate,timeout=1)
@@ -224,8 +225,44 @@ class clearcore():
                 self.position                    = float('nan')
                 self.A12_volts                   = float('nan')
 
+
+class clearcore_daq():
+    def __init__(self,com_port,baudrate):
+        self.data = []
+        
+        try: 
+            self.com = serial.Serial(com_port,baudrate,timeout=1)
+            self.com.reset_input_buffer()
+        except Exception as e:
+            print(f'Error Opening COM Port for DAQ Teknic ClearCore: {e}')
+            self.com = ''
+
+    def read_data(self):
+        if self.com.in_waiting > 0:
+            # read the bytes and convert from binary array to ASCII
+            # data_str = self.com.read(self.com.in_waiting).decode('ascii') 
+            data_str = self.com.readline().decode('utf-8')
+            # print the incoming string without putting a new-line
+            # ('\n') automatically after every print()
+            # print(data_str, end='')
+
+            # Format the data string so it can be appended to an array
+            if data_str[0] == '>': # each received data string should start with a >.  If not we've recieved data somewhere in the middle of a transmission
+                data_str = data_str.replace('>','')
+                # data_str = data_str.replace('\n','')
+                # data_str = data_str.replace('\r','')
+                this_data = data_str.strip().split(',')
+                for i in range(len(this_data)):
+                    this_data[i] = float(this_data[i])
+                self.data.append(this_data)
+                # print(self.data)
+            else: 
+                print(f"Incomplete Data transmission: {data_str}")
+                print(f"First Character: {data_str[0]}")
+
+
 if __name__ == '__main__':
-    x_axis = clearcore('COM11',9600,'m')
+    x_axis = clearcore_motion('COM11',9600,'m')
 
     x_axis.clear_faults()
 
