@@ -33,13 +33,16 @@ class state_machine():
 
     def check_state(self): 
         self.axis.poll_status()
+        # print(f"Steps Active? {bool(self.axis.StepsActive)}")
         if self.state == 0 and bool(self.axis.Enabled): # motor disabled
             self.axis.disable()
         elif self.state == 1 and not bool(self.axis.Enabled):  # motor enabled, but not moving
             self.axis.enable()
+            self.axis.stop_motion()
+            # self.daq.read_data()
         elif self.state == 2.1 and not bool(self.axis.InNegativeLimit) and self.previous_state != 2.1: # GUI sets state to 2 to initiate homing sequence
             self.axis.jog(-5)
-            print("starting move to limit switch")
+            # print("starting move to limit switch")
         elif self.state == 2.1 and bool(self.axis.InNegativeLimit) and not bool(self.axis.StepsActive): # If we've made it to the negative limit switch.
             self.state = 2.2
             self.axis.clear_faults()
@@ -54,16 +57,21 @@ class state_machine():
             self.state = 2.4
             self.axis.clear_faults()
             self.axis.set_absoulute_position(0)
+            self.axis.poll_status()
             self.state = 1
             self.axis.set_velocity(self.axis.travel_vel)
         elif self.state == 4.1 and self.previous_state != 4.1:
             self.axis.jog(self.jog_speed*-1)
         elif self.state == 4.2 and self.previous_state != 4.2:
             self.axis.jog(self.jog_speed)
-
         elif self.state == 3 and self.previous_state != 3: 
             self.axis.move_to_absolute_position(self.axis.target)
+            # self.daq.com.flush()
             self.daq.data = [] # clear the logged data array at the beginning of each positional move
+            # self.daq.read_data()
+        elif self.state == 3 and bool(self.axis.StepsActive):
+            # self.daq.read_data()
+            pass
         elif self.state == 3 and not bool(self.axis.StepsActive): # the move is done. 
             self.state = 1
 

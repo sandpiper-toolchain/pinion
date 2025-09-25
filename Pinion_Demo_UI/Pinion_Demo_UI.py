@@ -5,18 +5,19 @@ import Pinion_StateMachine
 import matplotlib.animation as animation
 
 # Initialize and Configure the GUI
-gui = safl.gui('SandPiper Demo GUI')
+gui = safl.gui('Project Pinion Demo GUI',icon='./pinion_feather_gear.ico')
 gui.add_tabs(['Main','Diagnostics'])
 gui.add_frame(gui.tabs['Main'],'Status')
 gui.add_frame(gui.tabs['Main'],'Plots')
 
 # Initialize Motor Controllers: 
 x_axis = CleareCore_funcs.clearcore_motion('COM11',9600,'m')
-daq    = CleareCore_funcs.clearcore_daq('COM6',9600)
+daq    = CleareCore_funcs.clearcore_daq('COM6',115200)
 statemachine = Pinion_StateMachine.state_machine(x_axis,daq)
 
 python_loop_time = safl.timestamp_looptime(gui.frames['Status'])
 state_display = safl.value_display(gui.frames['Status'],"Current State")
+stop_button = safl.one_button(gui.frames['Status'],'STOP',statemachine.enter_standby,background_color = 'red')
 clear_faults_button = safl.one_button(gui.frames['Status'],'Clear Motor Errors',x_axis.clear_faults)
 homing_button = safl.one_button(gui.frames['Status'],"Home Axis",statemachine.start_homing_seq)
 x_jog_buttons = safl.jog_buttons(gui.frames['Status'],'Jog X',statemachine.start_position_move,statemachine.enter_neg_jog,statemachine.enter_pos_jog,statemachine.enter_standby)
@@ -38,6 +39,7 @@ def gui_exit():
 
 def main():
     python_loop_time.update(datetime.datetime.now())
+    # print(f"State: {statemachine.state}")
 
     if statemachine.state != statemachine.previous_state: # check if state has changed since last loop or if in homing mode.
         state_display.update(statemachine.state_desc[statemachine.state])
@@ -49,18 +51,17 @@ def main():
         statemachine.check_state()
         x_jog_buttons.update_current_pos(x_axis.position)
 
-    if statemachine.state in [3,0,1]:
-        daq.read_data()
-        
+    # print(f"Is State in [0,1,3]? {statemachine.state in [0,1,3]}")
+    # if statemachine.state in [0,1,3]:
+    daq.read_data()       
     
     gui.window.after(10,main) # Rerun again after xxx milliseconds
 
 def update_plotting(i):
         if daq.data:
             plots.refresh_plot(daq.data)
-            # print(daq.data)
-    
-ani1= animation.FuncAnimation(plots.figure,update_plotting,interval=10)
+            # print(daq.data)    
+ani1= animation.FuncAnimation(plots.figure,update_plotting,interval=100)
 
 main()
 

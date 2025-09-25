@@ -297,7 +297,7 @@ class one_button():
    |  button 1| 
     __________  
    '''
-    def __init__(self,container,button_label,b1_action):
+    def __init__(self,container,button_label,b1_action,**kwargs):
         self.frame = tk.Frame(container,pady=2)
         self.frame.pack(fill=tk.X)
         self.b1 = tk.Button(self.frame,text = button_label,font=('Calibri',10),command=b1_action,width=20)
@@ -309,6 +309,9 @@ class one_button():
         # self.b1.pack(side=tk.LEFT,padx=2,pady=2)
         self.b1.pack(padx=2,pady=2)
         # self.b2.pack(side=tk.LEFT,padx=2,pady=2)
+
+        if "background_color" in kwargs:
+            self.b1.config(background=kwargs['background_color'])
 
     def disable_button(self):
         self.b1['state'] = 'disabled'
@@ -812,7 +815,7 @@ class jog_buttons():
         self.entry_value = tk.StringVar()
 
         self.label = tk.Label(self.frame,text=title,font=('Calibri',11,'bold'))
-        self.label.pack(anchor='w')
+        self.label.pack(side = tk.LEFT)
 
         self.left_button = tk.Button(self.frame,text='\u2190',font=('Calibri',15,'bold')) # \u2190 is unicode Left Arrow
         self.left_button.pack(side=tk.LEFT)
