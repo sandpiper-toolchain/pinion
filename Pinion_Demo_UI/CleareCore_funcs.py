@@ -4,28 +4,33 @@ import numpy as np
 
 class clearcore_motion():
     def __init__(self,com_port,baudrate,units):
+
+        # Attempt to open the com port and throw an error if the com port cannot be found
         try: 
             self.com = serial.Serial(com_port,baudrate,timeout=0.1)
             self.com.reset_input_buffer()
+            self.com.flush()
         except Exception as e:
             print(f'Error Opening COM Port for Teknic ClearCore: {e}')
             self.com = ''
 
+        # Set some default values
         self.travel_vel = 100
         self.jog_vel    = 5
         self.scan_vel   = 30
-
         self.target = 0
         
+        self.units = units #pass the units that the motor controller is using to the clearcore_motion object. This is maybe a legacy thing.  Some of the Zetas on NCED carts used meters instead of mm because of max number sizes allowed be to saved to variables. I kept the units the same in the ClearCore so it could also function as a Zeta
 
-        self.units = units
-        self.send_command('echo0')
+        # Set Execute a few commands to get the ClearCore ready to communicate with the GUI program
+        self.send_command('echo0') # turn off echo so ClearCore doesn't echo back each character it receives over serial
         self.send_command('verbose0') # turn off Verbose Response
         self.send_command('ma1') # put the controller into absolute position mode. 
         self.scaler = {'m':1000,'mm':1} # GUI will always display in mm, but sometimes the motor controller is configured in meters. 
+        self.set_velocity(self.travel_vel) # set the velocity to the default travel velocity
 
-        self.set_velocity(self.travel_vel)
 
+        # Intialize the status variables that will be populated with the poll_status() command
         self.AtTargetPos                 = -999
         self.StepsActive                 = -999
         self.AtTargetVel                 = -999
@@ -58,9 +63,15 @@ class clearcore_motion():
         self.position                    = float('nan')
         self.A12_volts                   = float('nan')
 
-        
 
     def send_command(self,command):
+        '''
+        Function to format and send serial commands to the ClearCore and read back the response. 
+
+        Input: command (string) the command you want to send to the ClearCore
+
+        Returns: the response received from the ClearCore as a string. If an error is encountered while sending or receiving the response will be 'NAN'
+        '''
         command_encoded = (command+chr(13)).encode() # using \n for newline/carriage return doesn't seem to work. 
         # print(f'Command as Send: {command_encoded}')
         try:
@@ -74,55 +85,81 @@ class clearcore_motion():
         return response.decode('utf-8')
     
     def set_absoulute_position(self,posn):
+        '''
+        Sends the command to set the absolute position of the ClearCore controller. 
+
+        Input: posn (float or int) is the position in mm that you want to set the position to. If the controller is set up in meters, this function will scale to meters before sending the command.
+
+        Returns: None
+        '''
         self.send_command(f'pset {posn/self.scaler[self.units]:.4f}')
 
     def set_velocity(self,vel):
+        '''
+        Send the command to set the velocity for ClearCore to use while moving.
+
+        Input: vel (float or int) is the velocity in mm/s. This function will scale to the units being used on the controller (e.g. meters)
+
+        Returns: None
+        '''
         self.send_command(f'v {vel/self.scaler[self.units]:.4f}')
 
-    def read_position(self):
-        try:
-            response = self.send_command(f'tpm')
-            response = response.replace('TPM','')
-            response = response.replace('>','')
-            response = response.replace('+','')
-            response = response.replace('*','')
-            self.position = float(response.strip())
-        except Exception as e:
-            print(f'Error Refreshing Position: {e}')
-            self.position = float('nan')
-
-    def home_axis(self):
-        self.jog(-5) # mm/s
-
-        self.poll_status()
-        while bool(self.StepsActive):
-            print(self.InNegativeLimit)
-            self.poll_status()
-
-
     def enable(self):
+        '''
+        Send the command to enable the motor.
+
+        Input: None
+
+        Returns: None
+        '''
         self.send_command(f'drive1')
-        # self.wait_for_HLFB()
 
     def disable(self):
+        '''
+        Send the command to disable the motor.
+
+        Input: None
+
+        Returns: None
+        '''
         self.send_command(f'drive0')
 
     def move_to_absolute_position(self,target):
-        self.send_command('ma1')
+        '''
+        Send the command to move to an absolute position using the current velocity setting.
+
+        Input: target (numeric) the position in mm to move to.  If the ClearCore is set to units other than mm, this function will scale appropriately before sending the command.
+
+        Returns: None
+        '''
+        self.send_command('ma1') # Put the ClearCore in absolute positioning mode.
         command = f'd{target/self.scaler[self.units]:0.4f}'
         self.send_command(command)
         self.send_command('go')
 
     def relative_move(self, dist): 
+        '''
+        Send the command to move a relative distance using the current velocity setting.
+
+        Input: dist (numeric) the distance in mm to move.  If the ClearCore is set to units other than mm, this function will scale appropriately before sending the command.
+
+        Returns: None
+        '''
         self.send_command('ma0')
         command = f'd{dist/self.scaler[self.units]:0.4f}'
         self.send_command(command)
         self.send_command('go')
 
     def jog(self,vel):
+        '''
+        Send the command to jog (make a velocity move without a set distance or target position) IMPORTANT: after sending this command the motor will continue moving at the input velocity until a limit switch is tripped or the user sends the "stop_motion" command.
+
+        Input: vel (numeric) the velocity in mm/s to move at.  If the ClearCore is set to units other than mm, this function will scale appropriately before sending the command.
+
+        Returns: None
+        '''
         command = f'jog {vel/self.scaler[self.units]:.4f}'
         self.send_command(command)
-        # self.send_command('ma1') # put the controller back into absolute positioning mode. 
 
     def stop_motion(self):
         command = f's'
@@ -228,7 +265,10 @@ class clearcore_motion():
 
 class clearcore_daq():
     def __init__(self,com_port,baudrate):
-        self.data = []
+        # self.data = np.zeros([1,2]).astype('float')
+        self.data_array = []
+        # self.data[0,:] = np.nan
+        # self.scaling_factors = {1:[1,0]}
         try: 
             self.com = serial.Serial(com_port,baudrate,timeout=0.1)
             self.com.reset_input_buffer()
@@ -236,17 +276,12 @@ class clearcore_daq():
             print(f'Error Opening COM Port for DAQ Teknic ClearCore: {e}')
             self.com = ''
 
-    def read_data(self):
+    def read_data(self,scale_array,z_probe):
         if self.com.in_waiting > 0:
             # read the bytes and convert from binary array to ASCII
             data_str = self.com.read(self.com.in_waiting).decode('ascii') 
-            # data_str = self.com.readline().decode('utf-8')
-            # print the incoming string without putting a new-line
-            # ('\n') automatically after every print()
-            # print(data_str, end='')
 
-            # Format the data string so it can be appended to an array
-            
+            # Format the data string so it can be appended to an array            
             data_str_array = data_str.split('\n')
             data_split_array = []
             # temp_data = []
@@ -262,9 +297,12 @@ class clearcore_daq():
                 if not temp_data == [] and not temp_data == ['']:
                     for k in range(len(temp)):
                         temp_data[k] = float(temp_data[k])
-                    self.data.append(temp_data)
+                    self.data_array.append(temp_data)
 
-            # print(self.data)
+            # convert the data_array to a numpy array so its easier to work with.
+            self.data = np.asarray(self.data_array,dtype='float')
+            # Apply the scale factors to convert from voltage to mm
+            self.data[:,1] = z_probe - self.data[:,1]*scale_array[0] + scale_array[1]
 
 
 if __name__ == '__main__':

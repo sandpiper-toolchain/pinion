@@ -19,40 +19,44 @@ States :
 '''
 
 import CleareCore_funcs 
+import SAFL_tkinter_toolbox as safl
 
 class state_machine():
-    def __init__(self,axis:CleareCore_funcs.clearcore_motion,daq:CleareCore_funcs.clearcore_daq): 
-        self.state = 0
-        self.previous_state = 0
-        self.axis = axis
-        self.daq = daq
-        self.jog_speed = 5 # mm/s
-        self.data = []
+    def __init__(self,axis:CleareCore_funcs.clearcore_motion,daq:CleareCore_funcs.clearcore_daq,axis_limits): 
+        self.state = 0 #Initialize state at 0 (Disabled)
+        self.previous_state = 0 # Initialize previous state at 0
+        self.axis = axis # add axis as a part of the statemachine object so it can be accessed later in the statemachine class
+        self.daq = daq # add daq to the statemachine object
+        self.jog_speed = 5 # mm/s Set the default jog speed
+        self.axis_limits = axis_limits # add the limit settings to the statemachine object.
 
+        # Create a dictionary of the states and their descriptions that can be used by the GUI to tell the user what state we're in
         self.state_desc = {0:"Disabled",1:"Standy (Motor Enabled)",2:"Homing",2.1:"Homing: Move to Limit",2.2:"Homing: Backing off",2.3:"Homing: Reapproach Limit",2.4:"Homing: Resetting Zero",3:"Moving to absolute position",4.1:"Jogging-Negative",4.2:"Jogging-Positive",5.1:"Scanning: Collecting Data",5.2:"Scanning: Traveling"}
 
+    # define a function that will check the current state and execute commands appropriate for the state that we're in
     def check_state(self): 
-        self.axis.poll_status()
-        # print(f"Steps Active? {bool(self.axis.StepsActive)}")
+        self.axis.poll_status() #Poll the motor controller over the serial connection to retrieve the latest data from the motor controller
+        # STATE 0: Disabled
         if self.state == 0 and bool(self.axis.Enabled): # motor disabled
             self.axis.disable()
-        elif self.state == 1 and not bool(self.axis.Enabled):  # motor enabled, but not moving
+        # STATE 1: Standby (Motor Enabled)
+        elif self.state == 1 and not bool(self.axis.Enabled):  # STATE 1: motor enabled, but not moving
             self.axis.enable()
             self.axis.stop_motion()
-            # self.daq.read_data()
+        # STATE 2.1: Homing: Moving to the negative limit switch
         elif self.state == 2.1 and not bool(self.axis.InNegativeLimit) and self.previous_state != 2.1: # GUI sets state to 2 to initiate homing sequence
             self.axis.jog(-5)
-            # print("starting move to limit switch")
+        # STATE 2.2: Homing: Backing off the limit switch
         elif self.state == 2.1 and bool(self.axis.InNegativeLimit) and not bool(self.axis.StepsActive): # If we've made it to the negative limit switch.
             self.state = 2.2
             self.axis.clear_faults()
             self.axis.set_velocity(10)
             self.axis.relative_move(10)
-            # self.axis.poll_status()
-            
+        # STATE 2.3: Homing: Reapproach the limit switch even slower 
         elif self.state == 2.2 and not bool(self.axis.StepsActive): # if finished backing off the limit switch
             self.axis.jog(-self.jog_speed/2) # reapproach the limit switch at half the initial speed.
             self.state = 2.3
+        #STATE 2.4: Reset position to 0 and transition back to state=1 Standby
         elif self.state == 2.3 and bool(self.axis.InNegativeLimit): # If we've made it to the negative limit switch.
             self.state = 2.4
             self.axis.clear_faults()
@@ -60,21 +64,26 @@ class state_machine():
             self.axis.poll_status()
             self.state = 1
             self.axis.set_velocity(self.axis.travel_vel)
-        elif self.state == 4.1 and self.previous_state != 4.1:
-            self.axis.jog(self.jog_speed*-1)
-        elif self.state == 4.2 and self.previous_state != 4.2:
-            self.axis.jog(self.jog_speed)
-        elif self.state == 3 and self.previous_state != 3: 
-            self.axis.move_to_absolute_position(self.axis.target)
-            # self.daq.com.flush()
-            self.daq.data = [] # clear the logged data array at the beginning of each positional move
-            # self.daq.read_data()
+        # STATE 3:
+        elif self.state == 3 and self.previous_state != 3:
+            if self.axis.target >= self.axis_limits[0] and self.axis.target <= self.axis_limits[1]:
+                self.axis.move_to_absolute_position(self.axis.target)
+                self.daq.data_array = [] # clear the logged data array at the beginning of each positional move
+            else: 
+                safl.popup_warning("Commanded Move is outisde software limits",f'Commanded Move is outside of software limits: {self.axis_limits[0]}mm \u2192 {self.axis_limits[1]}mm')
+                print(f'Commanded move is outside of set limits: {self.axis_limits[0]}mm \u2192 {self.axis_limits[1]}mm')
         elif self.state == 3 and bool(self.axis.StepsActive):
-            # self.daq.read_data()
             pass
         elif self.state == 3 and not bool(self.axis.StepsActive): # the move is done. 
             self.state = 1
+        #STATE 4.1: Jog negative
+        elif self.state == 4.1 and self.previous_state != 4.1:
+            self.axis.jog(self.jog_speed*-1)
+        # STATE 4.2: Jog positive
+        elif self.state == 4.2 and self.previous_state != 4.2:
+            self.axis.jog(self.jog_speed)
 
+    # Define Functions that can be called programmatically or by GUI Buttons to change states
     def enter_neg_jog(self):
         self.state = 4.1
     def enter_pos_jog(self):
@@ -91,6 +100,7 @@ class state_machine():
         self.state = 3
 
 
+# For testing.  Only runs if this is the main program that was called.  Not if it was called by another Python script
 if __name__ == '__main__':
     import time
     x_axis = CleareCore_funcs.clearcore('COM11',9600,'m')
