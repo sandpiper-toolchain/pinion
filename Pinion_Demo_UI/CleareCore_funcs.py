@@ -3,6 +3,16 @@ import time
 import numpy as np
 
 class clearcore_motion():
+    '''
+    Opens a comm port for for the control of a ClearCore motion controller. Typically this COM port is COM-0 on the ClearCore. The com port is used strictly for the control of the motor and monitoring its state.  Measurements of current position and analog inputs are done with a similar class called "clearcore_daq". 
+
+    Inputs: 
+    com_port (string): the name of the com port on your computer that you are using to connect to the ClearCore (NOT the com port on the ClearCore).  You can find which com port you are using in Windows Device Manager. 
+    baudrate (int): the baudrate of the ClearCore serial port (typically 9600)
+    units (string e.g. 'mm' or 'm'): The units that the ClearCore is using for scaling from steps to engineering units. The Pinion GUI always uses mm, but the ClearCore is sometimes set up in meters. Specifying the units here always Python to accurately scale from the ClearCore units to mm when polling position or sending motion commands. 
+
+    Returns: an object referencing the ClearCore with atributes and actions relevant to controlling the axis
+    '''
     def __init__(self,com_port,baudrate,units):
 
         # Attempt to open the com port and throw an error if the com port cannot be found
@@ -162,26 +172,60 @@ class clearcore_motion():
         self.send_command(command)
 
     def stop_motion(self):
+        '''
+        Send the command to stop the axis using the ClearCore command: "MoveStopAbrupt"
+
+        Input: None
+
+        Returns: None
+        '''
         command = f's'
         self.send_command(command)
 
     def set_output_IO(self,connector_num,state):
+        '''
+        Send the command to turn on or off one of the 6 I/O Ports on the ClearCore. 
+
+        Inputs: 
+        connector_num (Int): the number of the I/O to turn on/off. Allowable values are 0-5 and correspond to the I/O ports on the Clearcore labeled "I/O-0" to "I/O-5" 
+        state (Int or Bool): The state you would like to set the I/O output to. 1 or True = On/High.  0 or False = Off/Low
+
+        Returns: None
+        '''
         command = f'digout{connector_num} {state}'
         self.send_command(command)
-        # print(f'Digital Output Command: {command}')
 
     def wait_for_HLFB(self):
+        '''
+        Wait for the ClearCore to finish the current move. IMPORTANT: This command will pause execution of any following commands until the current move has completed. This function will continuously poll the status of the ClearCore and look for the "StepsActive" flag to be False, indicating that the axis is no longer moving. 
+
+        Inputs: None
+
+        Returns: None
+        '''
         self.poll_status()
         while self.StepsActive != 0:
-            # self.read_position()
-            # print(f'current position: {self.position} counts.  HLFB = {self.HlfbState}')
             self.poll_status()
-        print('Move Finished')
+        # print('Move Finished')
             
     def clear_faults(self):
+        '''
+        Send the Command to clear motor faults to the ClearCore controller. 
+
+        Inputs: None
+
+        Returns: None
+        '''
         self.send_command(f'clear')
     
     def Send_Program(self,filename):
+        '''
+        Open a text file, read its contents line by line and send them through the serial port to the ClearCore. This command can be used to send Zeta-like programs to the ClearCore that will be saved on the SD card and can be executed by calling the name of the program.
+
+        Inputs: filename (string), the filepath and name of the text file to be read and sent. Example `C:/Users/milli079/Documents/GitHub/pinion/TeknicZeta_Stepper/ZetaPrgs/MillirenDevSetup/DBII_Milliren.PRG`
+
+        Returns: None
+        '''
         print('Sending New Program to ClearCore')
         self.send_command('verbose1')
         with open(filename,'r') as fid: 
@@ -193,8 +237,14 @@ class clearcore_motion():
         self.send_command('verbose0')
 
     def poll_status(self):
+        '''
+        Poll the ClearCore for its current status and update all the values relevant to the current state of the ClearCore. Parameters retrieved with this command include, StepsActive, Enabled, InPositiveLimit, InNegativeLimit, position, Analog input voltage, etc.
+
+        Input: None
+
+        Retunrs: None
+        '''
         status_str = self.send_command('status')
-        # print(status_str)
         status_str = status_str.strip()
         status_str = status_str.replace('>','')
         status_array = status_str.split(',')
@@ -264,11 +314,19 @@ class clearcore_motion():
 
 
 class clearcore_daq():
+    '''
+    Opens a com port on the computer to communicate with the ClearCore Controller in order to read scan data (position of the axis and sensor output measured on the analog input).  The port is separate from the clearcore_motion port so that it doesn't interfer with any of the motion commands. Typically the USB port on the ClearCore is used.  Connecting the ClearCore to your computer with a USB cable mounts the ClearCore as a com port on your computer. You can find the com port number with Windows Device Manager. 
+
+    Inputs: 
+        com_port (string e.g. 'COM1'): The com port your computer should use to communicate with the ClearCore. You can find this port with Windows Device Manager. 
+        baudrate (int): The baudrate the ClearCore is using to communicate.  This must match the baudrate the ClearCore is programmed to use (typically 115200)
+
+    Returns: 
+        an object referencing the ClearCore controller with atttributes and actions relevant to collecting data with the ClearCore.
+
+    '''
     def __init__(self,com_port,baudrate):
-        # self.data = np.zeros([1,2]).astype('float')
         self.data_array = []
-        # self.data[0,:] = np.nan
-        # self.scaling_factors = {1:[1,0]}
         try: 
             self.com = serial.Serial(com_port,baudrate,timeout=0.1)
             self.com.reset_input_buffer()
@@ -277,6 +335,8 @@ class clearcore_daq():
             self.com = ''
 
     def read_data(self,scale_array,z_probe):
+        '''
+        '''
         if self.com.in_waiting > 0:
             # read the bytes and convert from binary array to ASCII
             data_str = self.com.read(self.com.in_waiting).decode('ascii') 

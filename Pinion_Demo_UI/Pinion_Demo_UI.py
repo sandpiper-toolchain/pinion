@@ -51,7 +51,7 @@ def main():
         x_jog_buttons.update_current_pos(x_axis.position) # Update the value display for the current position
 
     # Read Topotgraphy data from the Keyence Laser range finder
-    daq.read_data(gui.configs['Keyence Scale'],z_probe=668)# in this case z_probe is fixed at 668.  This could be dynamically changed though on a 3axis machine if Z is moving.     
+    daq.read_data(gui.configs['Keyence Scale'],z_probe=668)# in this case z_probe is fixed at 668 (The cart Im using for testing doesn't have Z-stage).  This could be dynamically changed though on a 3axis machine if Z is moving.     
     
     gui.window.after(10,main) # Rerun main() again after xxx milliseconds
 
