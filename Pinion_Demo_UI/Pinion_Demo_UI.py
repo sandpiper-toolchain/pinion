@@ -4,7 +4,7 @@ import CleareCore_funcs
 import Pinion_StateMachine
 import matplotlib.animation as animation
 
-# Initialize and Configure the GUI
+# Initialize and Configure the GUI.  Read in the config.json that contains com port IDs, scale factors, software limits, etc.
 gui = safl.gui('Project Pinion Demo GUI',icon='./pinion_feather_gear.ico')
 gui.add_tabs(['Main','Diagnostics'])
 gui.add_frame(gui.tabs['Main'],'Status')

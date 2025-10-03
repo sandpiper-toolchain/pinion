@@ -26,10 +26,41 @@ The secondary objective was to evaluate the ClearCore controller from Teknic Inc
 - [Laser Distance Sensor Controller: LK-2000](https://www.keyence.com/products/measure/laser-1d/lk/models/lk-2000/?search_dl=1): Discontinued (Any sensor with an analog output will work)
 
 ## TeknicZeta_Stepper
-This folder contains files for the development of a ClearCore controller that can emulate a Zeta in controlling a single stepper on an existing SAFL/NCED Cart. The Arduino program files are located in the directory: `\pinion\TeknicZeta_Stepper\TeknicZeta`.
+This folder contains files for the development of a ClearCore controller that can emulate a Zeta in controlling a single stepper on an existing SAFL/NCED Cart. The Arduino program files are located in the directory: `\pinion\TeknicZeta_Stepper\TeknicZeta`. The programs were developed using the Arduino IDE and can be recompiled and deployed into a ClearCore controller by anyone using the Arduino IDE. You can install the ClearCore Arduino Wrapper by visiting [Teknic's website](https://teknic.com/products/io-motion-controller/clcr-4-13/).
+
+The code contained here allows the ClearCore to function as a Zeta controller and interface seamlessly with the legacy NCED/SAFL data carriages.  The same code can also be used to create new control interfaces and new functions can be added to the ClearCore code in Arduino to enable new features for future carriages.
 
 ## Pinion UI
+![Screenshot of Pinion UI](PinionGUI_Screenshot.png "Pinion UI Screenshot")
+
 To evaluate the ClearCore controller for use in a second generation data carriage a demo UI was developed using the Python tkinter package. This GUI is located in the directory: `\pinion\Pinion_Demo_UI`.
+
+When the GUI starts it loads the file `Config.json`. This file contains settings that pertain to the specific cart that is being currently used. These parameters include: 
+- Motion control COM port (the ID of the computer com port to use for sending/recieving motion control commands to the ClearCore)
+- Software limits (min and max safe coordinates)
+- DAQ COM port (The ID of the computer com port to use for receiving measurements from the ClearCore. This is a different com port than the motion control com port)
+- Scale factors to scale measurements from volts to mm
+
+### Homing 
+The Pinion UI uses the jog and position move functions on the ClearCore to home the axis using the negative direction limit switch. When the user clicks the "Home" Button in the UI, Python sends a serial command to the ClearCore to initiate a constant velocity move towards the negative limit switch.  The velocity is set low (by default 5 mm/s). While the move is taking place, Python is constantly polling the status of the ClearCore, primarily for its current position and the state of the limit switchs. Once Python sees that the negative limit switch has been reached, it commands an relative position move of 10mm away from the limit switch. Then it reapproaches the limit switch at half the original speed (by default 2.5 mm/s) until it reaches the limit switch again. At this point Python sends the serial command to set the absolute position on the ClearCore to 0. 
+
+Testing of the accuracy of this homing routine was done by mounting a dial indicator with a resolution of 0.001 inches (0.0254 mm). At the beginning of each test the axis would be homed by pressing the "Home" button in the Pinion GUI. After homing, a positional move to absolute position of 870mm was commanded. At this position the dial indictor would  be read and the measurement recorded. This process was repeated multiple times to make sure that after each homing sequence the axis would return to the same measurement on the dial indicator at postion 870mm. The results are shown in the table below and more details can be seen in the file: `./Pinion_Demo_UI/Homing_Repeatability_Test_2025-09-23.xlsx` The results show the accuracy of this homing routine to under 3 hundreths of a mm. 
+
+| Trial # | Axis Pos(mm) | Dial Indicator (in) | Dial Indicator (mm) | Difference |
+| :-----: | :----------: | :-----------------: | :-----------------: | :--------: |
+| 0       | 870          | 0.300               | 7.62                |    --      |
+| 1       | 870          | 0.3005              | 7.6327              | 0.0127     |
+| 2       | 870          | 0.301               | 7.6454              | 0.0254     |
+| 3       | 870          | 0.301               | 7.6454              | 0.0254     |
+| 4       | 870          | 0.301               | 7.6454              | 0.0254     |
+
+### Jog Controls
+The GUI contains jog contol buttons that can be used to manually move the axis. By clicking and holding the left or right arrows, the axis will start a velocity move. Letting go of the button will stop the movement of the axis. While the axis is in motion the "Current Position" value to the right of the jog buttons will update with the current position. While pressing the jog buttons, the motors will be permitted to move all the way to the limit switches - the software limits will not be utilized. 
+
+Located between the two left and right arrow buttons is a text entry window. In this entry, the user can type in a coordinate that they would like the axis to move to. After typing in the position you would like to move to press the Enter key on your keyboard to start the move. In this mode, the software limits will be in effect, ensuring that the axis does not exceed the preset safe envelope. 
+
+### Realtime Data Plots
+Any time the axis is moving the realtime plot of measurements will update. Measaurements when the axis has moved 1 mm. When jogging or homing, the measurements will just be added to the existing plot. When making a positional move (typing in a coordinate and pressing "Enter") the plot will be cleared at the beginning of the move so that the only measurements displayed are from that positional move.
 
 
 ## Installation Notes:

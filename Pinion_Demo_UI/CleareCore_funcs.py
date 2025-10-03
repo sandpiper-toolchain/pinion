@@ -315,11 +315,11 @@ class clearcore_motion():
 
 class clearcore_daq():
     '''
-    Opens a com port on the computer to communicate with the ClearCore Controller in order to read scan data (position of the axis and sensor output measured on the analog input).  The port is separate from the clearcore_motion port so that it doesn't interfer with any of the motion commands. Typically the USB port on the ClearCore is used.  Connecting the ClearCore to your computer with a USB cable mounts the ClearCore as a com port on your computer. You can find the com port number with Windows Device Manager. 
+    Opens a com port on the computer to communicate with the ClearCore Controller over a separate in order to read scan data (position of the axis and sensor output measured on the analog input).  The port is separate from the clearcore_motion port so that it doesn't interfer with any of the motion commands. Typically the USB port on the ClearCore is used.  Connecting the ClearCore to your computer with a USB cable mounts the ClearCore as a com port on your computer. You can find the com port number with Windows Device Manager. 
 
     Inputs: 
         com_port (string e.g. 'COM1'): The com port your computer should use to communicate with the ClearCore. You can find this port with Windows Device Manager. 
-        baudrate (int): The baudrate the ClearCore is using to communicate.  This must match the baudrate the ClearCore is programmed to use (typically 115200)
+        baudrate (int): The baudrate the baudrate ClearCore is using to communicate.  This must match the baudrate the ClearCore is programmed to use (typically 115200)
 
     Returns: 
         an object referencing the ClearCore controller with atttributes and actions relevant to collecting data with the ClearCore.
@@ -336,6 +336,13 @@ class clearcore_daq():
 
     def read_data(self,scale_array,z_probe):
         '''
+        Checks if there is data waiting in the serial buffer and reads it out if there is.  Then separates the data into two columns, position and analog voltage. This function expects the data in the serial buffer to formated `Pos,Volts/n`. After the data has been parsed into two columns, it is converted into a NumPy array and the scaled to real world coordinates using the values in the `scale_array`. This value is then subtracted from the height of the probe, `z_probe` to get evelation of the measurement relative to the experiment datum (zero).
+
+        Inputs: 
+            scale_array (1x2 numerical array): An array containing two values [slope,offset] used to convert the measurement from volts to real world distances (mm)
+            z_probe (numeric): The z position (in mm) of the sensor/probe during the measurement. Used to convert the distance measured by the sensor to an elevation relative to the experiment's datum (zero)
+
+        Returns: A numpy array representing x position and elevation data with two columns and number of rows equal to the number of measured points. The first column is the x position in mm and the second is the elevation relative to experiment datum measured at the x position given in the first column. All units are mm. 
         '''
         if self.com.in_waiting > 0:
             # read the bytes and convert from binary array to ASCII
@@ -344,7 +351,6 @@ class clearcore_daq():
             # Format the data string so it can be appended to an array            
             data_str_array = data_str.split('\n')
             data_split_array = []
-            # temp_data = []
             for i in range(len(data_str_array)):
                 temp = data_str_array[i].split(',')
                 data_split_array.append(temp)
@@ -361,11 +367,16 @@ class clearcore_daq():
 
             # convert the data_array to a numpy array so its easier to work with.
             self.data = np.asarray(self.data_array,dtype='float')
+
             # Apply the scale factors to convert from voltage to mm
             self.data[:,1] = z_probe - self.data[:,1]*scale_array[0] + scale_array[1]
 
 
 if __name__ == '__main__':
+    '''
+    This section only runs if it is the main script called by Python.  This is useful for troubleshooting.  If this script was called by the GUI or other scripts, this section will not be executed.
+    '''
+
     daq = clearcore_daq('COM6',115200)
 
     try: 
