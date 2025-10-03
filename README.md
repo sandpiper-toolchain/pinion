@@ -46,7 +46,7 @@ The Pinion UI uses the jog and position move functions on the ClearCore to home 
 
 Testing of the accuracy of this homing routine was done by mounting a dial indicator with a resolution of 0.001 inches (0.0254 mm). At the beginning of each test the axis would be homed by pressing the "Home" button in the Pinion GUI. After homing, a positional move to absolute position of 870mm was commanded. At this position the dial indictor would  be read and the measurement recorded. This process was repeated multiple times to make sure that after each homing sequence the axis would return to the same measurement on the dial indicator at postion 870mm. The results are shown in the table below and more details can be seen in the file: `./Pinion_Demo_UI/Homing_Repeatability_Test_2025-09-23.xlsx` The results show the accuracy of this homing routine to under 3 hundreths of a mm. 
 
-| Trial # | Axis Pos(mm) | Dial Indicator (in) | Dial Indicator (mm) | Difference |
+| Trial # | Axis Pos(mm) | Dial Indicator (in) | Dial Indicator (mm) | Difference (mm) |
 | :-----: | :----------: | :-----------------: | :-----------------: | :--------: |
 | 0       | 870          | 0.300               | 7.62                |    --      |
 | 1       | 870          | 0.3005              | 7.6327              | 0.0127     |
