@@ -16,20 +16,20 @@ bool Move(int position) {
   // Check if a motor alert is currently preventing motion
   // Clear alert if configured to do so
   if (motor0.StatusReg().bit.AlertsPresent) {
-    ComPort.println("Motor alert detected.");
+    Diag_ComPort.println("Motor alert detected.");
     PrintAlerts();
     if (HANDLE_ALERTS) {
       HandleAlerts();
     } else {
-      ComPort.println("Enable automatic alert handling by setting HANDLE_ALERTS to 1.");
+      Diag_ComPort.println("Enable automatic alert handling by setting HANDLE_ALERTS to 1.");
     }
-    ComPort.println("Move canceled.");
-    ComPort.println();
+    Diag_ComPort.println("Move canceled.");
+    Diag_ComPort.println();
     return false;
   }
 
-  //ComPort.print("Moving to absolute position: ");
-  //ComPort.println(position);
+  //Diag_ComPort.print("Moving to absolute position: ");
+  //Diag_ComPort.println(position);
 
   // Command the move of absolute distance
   if (MA) {
@@ -39,7 +39,7 @@ bool Move(int position) {
   }
 
   // Waits for HLFB to assert (signaling the move has successfully completed)
-  //ComPort.println("Moving.. Waiting for HLFB");
+  //Diag_ComPort.println("Moving.. Waiting for HLFB");
   //while ( (!motor0.StepsComplete() || motor0.HlfbState() != MotorDriver::HLFB_ASSERTED) &&
   //	!motor0.StatusReg().bit.AlertsPresent) {
   //    continue;
@@ -47,18 +47,18 @@ bool Move(int position) {
   // Check if motor alert occurred during move
   // Clear alert if configured to do so
   if (motor0.StatusReg().bit.AlertsPresent) {
-    ComPort.println("Motor alert detected.");
+    Diag_ComPort.println("Motor alert detected.");
     PrintAlerts();
     if (HANDLE_ALERTS) {
       HandleAlerts();
     } else {
-      ComPort.println("Enable automatic fault handling by setting HANDLE_ALERTS to 1.");
+      Diag_ComPort.println("Enable automatic fault handling by setting HANDLE_ALERTS to 1.");
     }
-    ComPort.println("Motion may not have completed as expected. Proceed with caution.");
-    ComPort.println();
+    Diag_ComPort.println("Motion may not have completed as expected. Proceed with caution.");
+    Diag_ComPort.println();
     return false;
   } else {
-    // ComPort.println("Move Done");
+    // Diag_ComPort.println("Move Done");
     return true;
   }
 }
@@ -68,26 +68,26 @@ bool VelocityMove(int commanded_Vel) {
   // Check if a motor alert is currently preventing motion
   // Clear alert if configured to do so
   if (motor0.StatusReg().bit.AlertsPresent) {
-    ComPort.println("Motor alert detected.");
+    Diag_ComPort.println("Motor alert detected.");
     PrintAlerts();
     if (HANDLE_ALERTS) {
       HandleAlerts();
     } else {
-      ComPort.println("Enable automatic alert handling by setting HANDLE_ALERTS to 1.");
+      Diag_ComPort.println("Enable automatic alert handling by setting HANDLE_ALERTS to 1.");
     }
-    ComPort.println("Move canceled.");
-    ComPort.println();
+    Diag_ComPort.println("Move canceled.");
+    Diag_ComPort.println();
     return false;
   }
 
-  //ComPort.print("Moving to absolute position: ");
-  //ComPort.println(position);
+  //Diag_ComPort.print("Moving to absolute position: ");
+  //Diag_ComPort.println(position);
 
   // Command the move of absolute distance
   motor0.MoveVelocity(commanded_Vel);
 
   // Waits for HLFB to assert (signaling the move has successfully completed)
-  //ComPort.println("Moving.. Waiting for HLFB");
+  //Diag_ComPort.println("Moving.. Waiting for HLFB");
   //while ( (!motor0.StepsComplete() || motor0.HlfbState() != MotorDriver::HLFB_ASSERTED) &&
   //	!motor0.StatusReg().bit.AlertsPresent) {
   //    continue;
@@ -95,85 +95,22 @@ bool VelocityMove(int commanded_Vel) {
   // Check if motor alert occurred during move
   // Clear alert if configured to do so
   if (motor0.StatusReg().bit.AlertsPresent) {
-    ComPort.println("Motor alert detected.");
+    Diag_ComPort.println("Motor alert detected.");
     PrintAlerts();
     if (HANDLE_ALERTS) {
       HandleAlerts();
     } else {
-      ComPort.println("Enable automatic fault handling by setting HANDLE_ALERTS to 1.");
+      Diag_ComPort.println("Enable automatic fault handling by setting HANDLE_ALERTS to 1.");
     }
-    ComPort.println("Motion may not have completed as expected. Proceed with caution.");
-    ComPort.println();
+    Diag_ComPort.println("Motion may not have completed as expected. Proceed with caution.");
+    Diag_ComPort.println();
     return false;
   } else {
-    // ComPort.println("Move Done");
+    // Diag_ComPort.println("Move Done");
     return true;
   }
 }
 //------------------------------------------------------------------------------
-
-void XG( ) {
-  processCommand("go");
-  processCommand("d0");
-  processCommand("EOT 88,68,13");
-
-  if (motor0.StatusReg().bit.MotorInFault) {
-    ComPort.print("X-STALLED ");
-    print_EOT();
-  } else if (motor0.StatusReg().bit.InPositiveLimit) {
-    ComPort.print("X-HIT_LM+ ");
-    print_EOT();
-
-  } else if (motor0.StatusReg().bit.InNegativeLimit) {
-    ComPort.print("X-HIT_LM- ");
-    print_EOT();
-  } else {
-    ComPort.print("X-DONE ");
-    print_EOT();
-  }
- 
-  processCommand("EOT 13,0,0");
-
-}
-
-//----------------------------------------------------------------------------------
-void XB() {
-  processCommand("go");
-  processCommand("d0");
-  processCommand("EOT 88,68,13");
-
-  if (motor0.StatusReg().bit.MotorInFault) {
-    ComPort.print("X-STALLED ");
-    print_EOT();
-    // processCommand("out.1-0");
-    // processCommand("out.2-0");
-    // ring_bell();
-
-  } else if (motor0.StatusReg().bit.InPositiveLimit) {
-    ComPort.print("X-HIT_LM+ ");
-    print_EOT();
-    // processCommand("out.1-0");
-    // processCommand("out.2-0");
-    // ring_bell();
-
-  } else if (motor0.StatusReg().bit.InNegativeLimit) {
-    ComPort.print("X-HIT_LM- ");
-    print_EOT();
-    // processCommand("out.1-0");
-    // processCommand("out.2-0");
-    // ring_bell();
-
-  } else {
-    ComPort.print("X-DONE ");
-    print_EOT();
-    // processCommand("out.1-0");
-    // processCommand("out.2-0");
-    // ring_bell();
-  }
- 
-  processCommand("EOT 13,0,0");
-
-}
 
 void ring_bell() {
   if (change_bell_state) {

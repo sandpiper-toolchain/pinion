@@ -1,6 +1,4 @@
-
 void configure_MQTT() {
-
   // Configure with an IP address assigned via DHCP
   if (usingDhcp) {
     // Use DHCP to configure the local IP address
@@ -64,8 +62,10 @@ void configure_MQTT() {
 void onMqttMessage(int messageSize) {
   packetbufferIndex = 0;
     // we received a message, print out the topic and contents
-    // Diag_ComPort.println("Received a message with topic '");
-    Diag_ComPort.print(mqttClient.messageTopic());
+    // Diag_ComPort.println("Received a message with topic ");
+    // Diag_ComPort.println(mqttClient.messageTopic());
+    String message_topic = mqttClient.messageTopic();
+    // Diag_ComPort.println(message_topic);
     // Diag_ComPort.print("', length ");
     // Diag_ComPort.print(messageSize);
     // Diag_ComPort.println(" bytes:");
@@ -73,10 +73,11 @@ void onMqttMessage(int messageSize) {
     // use the Stream interface to print the contents
     while (mqttClient.available()) {
       packetReceived[packetbufferIndex++] = (char)mqttClient.read();
-      // Diag_ComPort.print((char)mqttClient.read());
     }
     packetReceived[packetbufferIndex] = '\0';
-    Diag_ComPort.println(packetReceived);
 
-    Diag_ComPort.println();
+
+    ProcessMQTTCommand(message_topic,packetReceived);
+
+
   }
