@@ -4,10 +4,10 @@ void configure_MQTT() {
     // Use DHCP to configure the local IP address
     bool dhcpSuccess = Ethernet.begin(mac);
     if (dhcpSuccess) {
-      // Diag_ComPort.print("DHCP successfully assigned an IP address: ");
-      // Diag_ComPort.println(Ethernet.localIP());
+      Diag_ComPort.print("DHCP successfully assigned an IP address: ");
+      Diag_ComPort.println(Ethernet.localIP());
     } else {
-      // Diag_ComPort.println("DHCP configuration was unsuccessful!");
+      Diag_ComPort.println("DHCP configuration was unsuccessful!");
       while (true) {
         // TCP will not work without a configured IP address
         continue;
@@ -37,30 +37,43 @@ void configure_MQTT() {
     // Diag_ComPort.print("Attempting to connect to the MQTT broker: ");
     // Diag_ComPort.println(broker);
 
-  if (!mqttClient.connect(broker, port)) {
+  mqttClient.connect(broker,port);
+  // Diag_ComPort.println(mqttClient.connected());
+
+  if (!mqttClient.connected()) {
     Diag_ComPort.print("MQTT connection failed! Error code = ");
     Diag_ComPort.println(mqttClient.connectError());
 
-    while (1);
+    while (mqtt_retries < 3 && !mqttClient.connected()){
+      Diag_ComPort.println("Waiting 1 Second and Trying to Connect Again");
+      delay(1000);
+      mqttClient.connect(broker,port);
+      // Diag_ComPort.println(mqttClient.connected());
+      mqtt_retries++;
+    }
+
+    // while (1);
+  }
+  if (mqttClient.connected()) {
+    Diag_ComPort.println("You're connected to the MQTT broker!");
+    Diag_ComPort.println();
+
+    // set the message receive callback
+    mqttClient.onMessage(onMqttMessage);
+
+    Diag_ComPort.print("Subscribing to topic: ");
+    Diag_ComPort.println(sub_topic);
+    Diag_ComPort.println();
+
+    // subscribe to a topic
+    mqttClient.subscribe(sub_topic);
   }
 
-  Diag_ComPort.println("You're connected to the MQTT broker!");
-  Diag_ComPort.println();
-
-  Diag_ComPort.print("Subscribing to topic: ");
-  Diag_ComPort.println(sub_topic);
-  Diag_ComPort.println();
-
-  // set the message receive callback
-  mqttClient.onMessage(onMqttMessage);
-
-  // subscribe to a topic
-  mqttClient.subscribe(sub_topic);
 }
 
 
 void onMqttMessage(int messageSize) {
-  packetbufferIndex = 0;
+    packetbufferIndex = 0;
     // we received a message, print out the topic and contents
     // Diag_ComPort.println("Received a message with topic ");
     // Diag_ComPort.println(mqttClient.messageTopic());

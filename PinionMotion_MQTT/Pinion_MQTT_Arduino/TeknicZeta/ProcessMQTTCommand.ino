@@ -82,5 +82,13 @@ void ProcessMQTTCommand(String Topic, String Value) {
     } else {
       ConnectorIO1.State(false);
     }
+  } else if (SD_files.indexOf(Topic) > 0) { // Check if the command is the name of a program on the SD card.
+    Diag_ComPort.println("Command is the name of a program on the SD card!");
+    run_program_from_SD(Topic+".JSN");
+  
+  } else {
+    Diag_ComPort.print("Undefined Command with Topic: ");
+    Diag_ComPort.println(Topic);
+
   }
 }

@@ -32,6 +32,9 @@ bool usingDhcp = true;
 EthernetClient client;
 MqttClient mqttClient(client);
 
+int mqtt_retries = 0;
+int count = 0;
+
 int i = 0;
 bool verbose = false;
 bool moving_state = false;
@@ -79,11 +82,11 @@ bool enable_status = false;
 
 
 void setup() {
-  ComPort.begin(9600);
+  // ComPort.begin(9600);
   // while (!ComPort) {
   //   continue;
   // }
-  ComPort.ttl(false);  // RS232 not TTL
+  // ComPort.ttl(false);  // RS232 not TTL
 
   if (Diag_Port_enable) {
     Diag_ComPort.begin(9600);
