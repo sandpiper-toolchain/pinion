@@ -8,6 +8,8 @@ void ProcessMQTTCommand(String Topic, String Value) {
   Diag_ComPort.print("Value: ");
   Diag_ComPort.println(Value);
 
+  // Diag_ComPort.println(Topic.substring(Topic.indexOf('/')+1));
+
   Value.replace(" ", "");  // Remove any spaces that might be in the value string.
   if (programming_mode && Topic != "Commands/EndProgram") {
     list_files();
@@ -24,7 +26,7 @@ void ProcessMQTTCommand(String Topic, String Value) {
     Diag_ComPort.println("Writing Commands to SD Card");
   } else if (Topic == "Commands/BeginProgram" && !programming_mode) {
     programming_mode = true;
-    program_filename = Value + ".jsn";
+    program_filename = Value + ".JSN";
     delete_file(program_filename);
   } else if (Topic == "Commands/EndProgram") {
     append_to_file(program_filename, "}");
@@ -44,6 +46,7 @@ void ProcessMQTTCommand(String Topic, String Value) {
     motor0.EnableRequest(false);
 
   } else if (Topic == "Commands/SetAbsolutePosition") {
+    Diag_ComPort.println(Value);
     new_position_ref = Value.toFloat();
     motor0.PositionRefSet(Scale_mm_to_Steps(new_position_ref));
 
@@ -82,9 +85,14 @@ void ProcessMQTTCommand(String Topic, String Value) {
     } else {
       ConnectorIO1.State(false);
     }
-  } else if (SD_files.indexOf(Topic) > 0) { // Check if the command is the name of a program on the SD card.
+  } else if (Topic == "Commands/ListSDFiles") {
+    Diag_ComPort.print("List of Files on SD Card: ");
+    Diag_ComPort.println(SD_files);
+    // publish_mqtt_message_str("Commands/ListSDFiles",SD_files);
+
+  } else if (SD_files.indexOf(Topic.substring(Topic.indexOf('/')+1)) > 0) { // Check if the command is the name of a program on the SD card.
     Diag_ComPort.println("Command is the name of a program on the SD card!");
-    run_program_from_SD(Topic+".JSN");
+    run_program_from_SD(Topic.substring(Topic.indexOf('/')+1)+".JSN");
   
   } else {
     Diag_ComPort.print("Undefined Command with Topic: ");

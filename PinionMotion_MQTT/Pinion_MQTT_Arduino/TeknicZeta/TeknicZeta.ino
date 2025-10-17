@@ -33,6 +33,7 @@ EthernetClient client;
 MqttClient mqttClient(client);
 
 int mqtt_retries = 0;
+int max_mqtt_retries = 3;
 int count = 0;
 
 int i = 0;
@@ -61,7 +62,7 @@ String SD_files;
 bool Diag_Port_enable = true;
 
 // Define the velocity and acceleration limits to be used for each move
-float SCLD = 1;//800 / 2.54;
+float SCLD = 10;//800 / 2.54;
 float SCLV = 1;//800 / 2.54;
 float SCLA = 1;//800 / 2.54;
 

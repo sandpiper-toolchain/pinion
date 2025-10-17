@@ -5,6 +5,7 @@ File myFile;
 File root;
 File entry;
 
+String command_buffer;
 String Topic_buffer;
 String Value_buffer;
 
@@ -27,7 +28,7 @@ void list_files() {
       }
       //Diag_ComPort.println(entry.name());
       SD_files = SD_files + entry.name() + "\t";
-      SD_files.toLowerCase();
+      // SD_files.toLowerCase();
       ii++;
       entry.close();
     }
@@ -42,21 +43,34 @@ void run_program_from_SD(String filename) {
     Diag_ComPort.println("SD Card didn't initialize properly. Bummer Dude.");
   } else {
     myFile = SD.open(filename);  // filename can only be 8 characters long.  File extension can only be 3 characters.
+    Diag_ComPort.print("Opening SD Card File: ");
+    Diag_ComPort.println(filename);
 
     if (myFile) {
       while (myFile.available()) {
         int nextbyte = myFile.read();
-        if (nextbyte == char(58)) { // char(58) = : (colon)
-          fileBuffer[file_bufferIndex] = '\0';
+        // Diag_ComPort.println(nextbyte);
+        if (nextbyte == 44 || nextbyte == 125) { // char(54) = , (comma) char(125) is closed curly brace }
+          Diag_ComPort.println("Reached a comma or close brace.");
+          Diag_ComPort.println(char(nextbyte));
+          fileBuffer[file_bufferIndex++] = '\0';
           file_bufferIndex = 0;
           Diag_ComPort.println(fileBuffer);
-          Topic_buffer = fileBuffer; // If we just made it to a colon, then we have finished reading the Topic from the file. 
-        } else if (nextbyte == char(54)) { // char(54) = , (comma)
-          fileBuffer[file_bufferIndex] = '\0';
-          file_bufferIndex = 0;
-          Diag_ComPort.println(fileBuffer);
-          Value_buffer = fileBuffer;
-          ProcessMQTTCommand(Topic_buffer,Value_buffer);     
+          // Value_buffer.replace("}","").replace("{","");
+          command_buffer = fileBuffer;
+          command_buffer.replace("\"","");
+          command_buffer.replace("{","");
+          Topic_buffer = command_buffer.substring(0,command_buffer.indexOf(':'));
+          Value_buffer = command_buffer.substring(command_buffer.indexOf(':')+1);
+
+          Diag_ComPort.print("Topic: ");
+          Diag_ComPort.println(Topic_buffer);
+          Diag_ComPort.print("Value: ");
+          Diag_ComPort.println(Value_buffer);
+
+          ProcessMQTTCommand(Topic_buffer,Value_buffer);
+
+   
         } else {
           if (file_bufferIndex < FILE_BUFFER_SIZE - 1) {
             fileBuffer[file_bufferIndex++] = (char)nextbyte;
@@ -66,6 +80,8 @@ void run_program_from_SD(String filename) {
         }
         }
       }
+    } else {
+      Diag_ComPort.println("Unable to Open file on SD Card.");
     }
 }
 }

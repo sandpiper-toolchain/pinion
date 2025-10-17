@@ -4,6 +4,14 @@ void configure_MQTT() {
     // Use DHCP to configure the local IP address
     bool dhcpSuccess = Ethernet.begin(mac);
     if (dhcpSuccess) {
+      Diag_ComPort.println("     SANDPIPER");
+      Diag_ComPort.println("        __");
+      Diag_ComPort.println("    ___( o)>");
+      Diag_ComPort.println("    \\ <_. )");
+      Diag_ComPort.println("     `---'");
+      Diag_ComPort.println("       ||");
+      Diag_ComPort.println("    ~~~~~~~");
+      Diag_ComPort.println();
       Diag_ComPort.print("DHCP successfully assigned an IP address: ");
       Diag_ComPort.println(Ethernet.localIP());
     } else {
@@ -44,8 +52,12 @@ void configure_MQTT() {
     Diag_ComPort.print("MQTT connection failed! Error code = ");
     Diag_ComPort.println(mqttClient.connectError());
 
-    while (mqtt_retries < 3 && !mqttClient.connected()){
+    while (mqtt_retries < max_mqtt_retries && !mqttClient.connected()){
       Diag_ComPort.println("Waiting 1 Second and Trying to Connect Again");
+      Diag_ComPort.print("Attempt ");
+      Diag_ComPort.print(mqtt_retries);
+      Diag_ComPort.print(" of ");
+      Diag_ComPort.println(max_mqtt_retries);
       delay(1000);
       mqttClient.connect(broker,port);
       // Diag_ComPort.println(mqttClient.connected());
@@ -67,6 +79,10 @@ void configure_MQTT() {
 
     // subscribe to a topic
     mqttClient.subscribe(sub_topic);
+  } else {
+    Diag_ComPort.print("Connection to MQTT broker Failed after ");
+    Diag_ComPort.print(max_mqtt_retries);
+    Diag_ComPort.println(" attemps.  Check Network Connections and restart ClearCore.");
   }
 
 }

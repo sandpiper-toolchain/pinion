@@ -33,7 +33,7 @@ void publish_status() {
                        ",\"ConnectorIO1_State\":"+String(ConnectorIO1.State())+
                        ",\"CurrentPosition\":"+String(Scale_Steps_to_mm(motor0.PositionRefCommanded()),4)+
                        ",\"ConnectorA12_Volts\":"+String(ConnectorA12.AnalogVoltage(),4)+"}";
-
+  // Diag_ComPort.println(String(Scale_Steps_to_mm(motor0.PositionRefCommanded()),4));
   // Diag_ComPort.println(status_str);
   // Diag_ComPort.println(count++);
   publish_mqtt_message_str("motion/x_axis/status",status_str);
