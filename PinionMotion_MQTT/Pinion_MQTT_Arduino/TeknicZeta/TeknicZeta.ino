@@ -75,7 +75,7 @@ int accelerationLimit = 10000;  // pulses per sec^2
 
 // Declares user-defined helper functions.
 // The definition/implementations of these functions are at the bottom of the sketch.
-bool HANDLE_ALERTS = true;
+bool HANDLE_ALERTS = false;
 void PrintAlerts();
 void HandleAlerts();
 bool MoveAbsolutePosition(int32_t position);
@@ -129,8 +129,12 @@ void loop() {
     if (int(Scale_Steps_to_mm(motor0.PositionRefCommanded())*1000) != pos_at_last_trig) {
       pos_at_last_trig = int(Scale_Steps_to_mm(motor0.PositionRefCommanded())*1000);
 
-      publish_mqtt_message_float("DAQ/x_position",Scale_Steps_to_mm(motor0.PositionRefCommanded())*1000);
-      publish_mqtt_message_float("DAQ/keyence_volts",ConnectorA12.AnalogVoltage());
+      String DAQ_String = "{\"x_position\":"+String(Scale_Steps_to_mm(motor0.PositionRefCommanded())*1000)+
+                          ",\"keyence_volts\":"+String(ConnectorA12.AnalogVoltage())+"}";
+
+      publish_mqtt_message_str("DAQ",DAQ_String);
+      // publish_mqtt_message_float("DAQ/x_position",Scale_Steps_to_mm(motor0.PositionRefCommanded())*1000);
+      // publish_mqtt_message_float("DAQ/keyence_volts",ConnectorA12.AnalogVoltage());
       // Diag_ComPort.print(Scale_Steps_to_mm(motor0.PositionRefCommanded())*1000,2);
       // Diag_ComPort.print(",");
       // Diag_ComPort.println(ConnectorA12.AnalogVoltage(),6);

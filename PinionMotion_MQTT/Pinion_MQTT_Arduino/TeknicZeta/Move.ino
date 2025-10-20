@@ -15,7 +15,11 @@
 bool Move(int position) {
   // Check if a motor alert is currently preventing motion
   // Clear alert if configured to do so
-  if (motor0.StatusReg().bit.AlertsPresent) {
+  if (!motor0.StatusReg().bit.Enabled) {
+    Diag_ComPort.println("Motor is Not Enabled.  Move Canceled");
+    publish_mqtt_message_str("Alerts/x_axis","Motor is Not Enabled.  Move Canceled");
+  }
+  else if (motor0.StatusReg().bit.AlertsPresent) {
     Diag_ComPort.println("Motor alert detected.");
     PrintAlerts();
     if (HANDLE_ALERTS) {
@@ -28,22 +32,14 @@ bool Move(int position) {
     return false;
   }
 
-  //Diag_ComPort.print("Moving to absolute position: ");
-  //Diag_ComPort.println(position);
-
-  // Command the move of absolute distance
-  if (MA) {
-    motor0.Move(position, MotorDriver::MOVE_TARGET_ABSOLUTE); // if MA = true then we are in absolution positioning mode. 
-  } else {
-    motor0.Move(position); // if MA = false, then we're in relative positioning mode. 
+  else {
+    // Command the move of absolute distance
+    if (MA) {
+      motor0.Move(position, MotorDriver::MOVE_TARGET_ABSOLUTE); // if MA = true then we are in absolution positioning mode. 
+    } else {
+      motor0.Move(position); // if MA = false, then we're in relative positioning mode. 
+    }
   }
-
-  // Waits for HLFB to assert (signaling the move has successfully completed)
-  //Diag_ComPort.println("Moving.. Waiting for HLFB");
-  //while ( (!motor0.StepsComplete() || motor0.HlfbState() != MotorDriver::HLFB_ASSERTED) &&
-  //	!motor0.StatusReg().bit.AlertsPresent) {
-  //    continue;
-  //}
   // Check if motor alert occurred during move
   // Clear alert if configured to do so
   if (motor0.StatusReg().bit.AlertsPresent) {
