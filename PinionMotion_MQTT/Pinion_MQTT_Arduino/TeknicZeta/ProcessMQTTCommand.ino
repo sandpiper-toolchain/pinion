@@ -53,6 +53,12 @@ void ProcessMQTTCommand(String Topic, String Value) {
   } else if (Topic == "Commands/SetVelocity") {
     velocityLimit = Scale_Vel_mm_to_Steps(Value.toFloat());
     motor0.VelMax(velocityLimit);
+    Diag_ComPort.println("Velocity Limit Set to "+String(velocityLimit)+" steps per second");
+
+  } else if (Topic == "Commands/SetAcceleration") {
+    accelerationLimit = Scale_Accel_mm_to_Steps(Value.toFloat());
+    motor0.AccelMax(accelerationLimit);
+    Diag_ComPort.println("Acceleration Limit Set to "+String(accelerationLimit)+" steps per second per second");
 
   } else if (Topic == "Commands/MoveToAbsolutePosition") {
     MA = true;  // Move absolute = True
@@ -64,8 +70,11 @@ void ProcessMQTTCommand(String Topic, String Value) {
     position_commanded_mm = Value.toFloat();
     position_commanded_steps = Scale_mm_to_Steps(position_commanded_mm);
     Move(position_commanded_steps);
+
   } else if (Topic == "Commands/Jog") {
     VelocityMove(Scale_Vel_mm_to_Steps(Value.toFloat()));
+    Diag_ComPort.println("Jog Move at Vel: "+Value+"mm/sec");
+
   } else if (Topic == "Commands/StopMotion") {
     // The Value doesn't matter in this case.  If this message is sent through, no matter what the payload is it will stop motion.
     motor0.MoveStopAbrupt();
@@ -89,6 +98,9 @@ void ProcessMQTTCommand(String Topic, String Value) {
     Diag_ComPort.print("List of Files on SD Card: ");
     Diag_ComPort.println(SD_files);
     // publish_mqtt_message_str("Commands/ListSDFiles",SD_files);
+
+  } else if (Topic == "Commands/Scale") {
+    SCLD = Value.toFloat();
 
   } else if (SD_files.indexOf(Topic.substring(Topic.indexOf('/')+1)) > 0) { // Check if the command is the name of a program on the SD card.
     Diag_ComPort.println("Command is the name of a program on the SD card!");

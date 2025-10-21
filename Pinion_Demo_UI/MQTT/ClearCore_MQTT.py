@@ -3,7 +3,7 @@ import json
 import numpy as np
 
 class ClearCoreMQTT_motion(): 
-    def __init__(self,broker_address:str,broker_port:int,units:str,scale_array):
+    def __init__(self,broker_address:str,broker_port:int,scale_array):
         self.mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.mqttc.on_message = self.on_message
         self.mqttc.connect(broker_address,broker_port,60)
@@ -12,11 +12,9 @@ class ClearCoreMQTT_motion():
 
         # Set some default values
         self.travel_vel = 100
-        self.jog_vel    = 5
+        self.jog_vel    = 25
         self.scan_vel   = 30
         self.target = 0
-        
-        self.units = units #pass the units that the motor controller is using to the clearcore_motion object. This is maybe a legacy thing.  Some of the Zetas on NCED carts used meters instead of mm because of max number sizes allowed be to saved to variables. I kept the units the same in the ClearCore so it could also function as a Zeta
         
         self.data_array = []
         self.status_array = {}
@@ -29,8 +27,9 @@ class ClearCoreMQTT_motion():
         if msg.topic == "motion/x_axis/status":
             self.status_array = json.loads(msg.payload)
             # print(self.status_array["ConnectorA12_Volts"])
-        if msg.topic == "DAQ":
+        elif msg.topic == "DAQ":
             self.data_message = json.loads(msg.payload)
+            print(f"DAQ Data received: {self.data_message}")
             
             if "z_position" in self.data_message:
                 z_probe = self.data_message['z_position']
@@ -43,6 +42,8 @@ class ClearCoreMQTT_motion():
 
             # Apply the scale factors to convert from voltage to mm
             self.data[:,1] = z_probe - self.data[:,1]*self.scale_array[0] + self.scale_array[1]
+        else:
+            print(f"Message Received: {msg.topic+'  '+str(msg.payload)}")
 
 
     def set_absolute_position(self,posn):

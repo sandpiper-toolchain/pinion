@@ -32,7 +32,9 @@ void publish_status() {
                        ",\"ConnectorIO0_State\":"+String(ConnectorIO0.State())+
                        ",\"ConnectorIO1_State\":"+String(ConnectorIO1.State())+
                        ",\"CurrentPosition\":"+String(Scale_Steps_to_mm(motor0.PositionRefCommanded()),4)+
-                       ",\"ConnectorA12_Volts\":"+String(ConnectorA12.AnalogVoltage(),4)+"}";
+                       ",\"ConnectorA12_Volts\":"+String(ConnectorA12.AnalogVoltage(),4)+
+                       ",\"Scale\":"+String(SCLD,4)+
+                       "}";
   // Diag_ComPort.println(String(Scale_Steps_to_mm(motor0.PositionRefCommanded()),4));
   // Diag_ComPort.println(status_str);
   // Diag_ComPort.println(count++);

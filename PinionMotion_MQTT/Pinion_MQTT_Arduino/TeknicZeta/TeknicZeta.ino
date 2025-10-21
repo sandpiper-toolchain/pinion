@@ -7,7 +7,7 @@
 // MAC address of the ClearCore
 byte mac[] = {};
 
-const char broker[] = "160.94.187.233";
+const char broker[] = "192.168.1.100";
 int        port     = 1883;
 // const char pub_topic[]  = "arduino/simple";
 const char sub_topic[]   = "Commands/#";
@@ -62,9 +62,9 @@ String SD_files;
 bool Diag_Port_enable = true;
 
 // Define the velocity and acceleration limits to be used for each move
-float SCLD = 10;//800 / 2.54;
-float SCLV = 1;//800 / 2.54;
-float SCLA = 1;//800 / 2.54;
+double SCLD = 213.333333333333; // steps per millimeter
+double SCLV = SCLD;//1;//800 / 2.54; 
+double SCLA = SCLD;//800 / 2.54;
 
 long pos_at_last_trig = 0;
 
@@ -126,10 +126,10 @@ void loop() {
   }
 
   if (moving_state && Diag_Port_enable) {
-    if (int(Scale_Steps_to_mm(motor0.PositionRefCommanded())*1000) != pos_at_last_trig) {
-      pos_at_last_trig = int(Scale_Steps_to_mm(motor0.PositionRefCommanded())*1000);
+    if (int(Scale_Steps_to_mm(motor0.PositionRefCommanded())) != pos_at_last_trig) {
+      pos_at_last_trig = int(Scale_Steps_to_mm(motor0.PositionRefCommanded()));
 
-      String DAQ_String = "{\"x_position\":"+String(Scale_Steps_to_mm(motor0.PositionRefCommanded())*1000)+
+      String DAQ_String = "{\"x_position\":"+String(Scale_Steps_to_mm(motor0.PositionRefCommanded()))+
                           ",\"keyence_volts\":"+String(ConnectorA12.AnalogVoltage())+"}";
 
       publish_mqtt_message_str("DAQ",DAQ_String);

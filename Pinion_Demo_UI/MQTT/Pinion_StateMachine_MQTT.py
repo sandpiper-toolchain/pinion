@@ -27,7 +27,7 @@ class state_machine():
         self.previous_state = 0 # Initialize previous state at 0
         self.axis = axis # add axis as a part of the statemachine object so it can be accessed later in the statemachine class
         # self.daq = daq # add daq to the statemachine object
-        self.jog_speed = 5 # mm/s Set the default jog speed
+        # self.jog_speed = 5 # mm/s Set the default jog speed
         self.axis_limits = axis_limits # add the limit settings to the statemachine object.
 
         # Create a dictionary of the states and their descriptions that can be used by the GUI to tell the user what state we're in
@@ -48,16 +48,18 @@ class state_machine():
             self.axis.stop_motion()
         # STATE 2.1: Homing: Moving to the negative limit switch
         elif self.state == 2.1 and not bool(self.axis.status_array['InNegativeLimit']) and self.previous_state != 2.1: # GUI sets state to 2 to initiate homing sequence
-            self.axis.jog(-5)
+            self.axis.jog(-self.axis.jog_vel)
         # STATE 2.2: Homing: Backing off the limit switch
         elif self.state == 2.1 and bool(self.axis.status_array['InNegativeLimit']) and not bool(self.axis.status_array['StepsActive']): # If we've made it to the negative limit switch.
+            print("At Limit.  Moving 10 mm off limit")
             self.state = 2.2
             self.axis.clear_faults()
             self.axis.set_velocity(10)
             self.axis.relative_move(10)
+            # time.sleep(0.5)
         # STATE 2.3: Homing: Reapproach the limit switch even slower 
         elif self.state == 2.2 and not bool(self.axis.status_array['StepsActive']): # if finished backing off the limit switch
-            self.axis.jog(-self.jog_speed/2) # reapproach the limit switch at half the initial speed.
+            self.axis.jog(-self.axis.jog_vel/2) # reapproach the limit switch at half the initial speed.
             self.state = 2.3
         #STATE 2.4: Reset position to 0 and transition back to state=1 Standby
         elif self.state == 2.3 and bool(self.axis.status_array['InNegativeLimit']): # If we've made it to the negative limit switch.
@@ -80,10 +82,10 @@ class state_machine():
             self.state = 1
         #STATE 4.1: Jog negative
         elif self.state == 4.1 and self.previous_state != 4.1:
-            self.axis.jog(self.jog_speed*-1)
+            self.axis.jog(self.axis.jog_vel*-1)
         # STATE 4.2: Jog positive
         elif self.state == 4.2 and self.previous_state != 4.2:
-            self.axis.jog(self.jog_speed)
+            self.axis.jog(self.axis.jog_vel)
 
     # Define Functions that can be called programmatically or by GUI Buttons to change states
     def enter_neg_jog(self):

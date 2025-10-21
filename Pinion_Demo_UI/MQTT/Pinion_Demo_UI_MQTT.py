@@ -11,7 +11,7 @@ gui.add_frame(gui.tabs['Main'],'Status')
 gui.add_frame(gui.tabs['Main'],'Plots')
 
 # Initialize Motor Controllers and State Machine.
-x_axis = ClearCore_MQTT.ClearCoreMQTT_motion("160.94.187.233",1883,'m',gui.configs["Keyence Scale"])
+x_axis = ClearCore_MQTT.ClearCoreMQTT_motion("192.168.1.100",1883,gui.configs["Keyence Scale"])
 # daq    = CleareCore_funcs.clearcore_daq(gui.configs['DAQ Com Port'],115200)
 statemachine = Pinion_StateMachine_MQTT.state_machine(x_axis,gui.configs['x limits'])
 
@@ -46,12 +46,12 @@ def main():
         statemachine.check_state() # is the state has changed since the last loop run the state machine
     statemachine.previous_state = statemachine.state # update the previous_state
 
-    if statemachine.state not in [0,1]: # the state is one where the axis is moving
-        statemachine.check_state() # if there is motion, check the state and execute commands required by that state.
-        x_jog_buttons.update_current_pos(x_axis.status_array["CurrentPosition"]) # Update the value display for the current position
+    # if statemachine.state not in [0,1]: # the state is one where the axis is moving
+    statemachine.check_state() # if there is motion, check the state and execute commands required by that state.
+    x_jog_buttons.update_current_pos(x_axis.status_array["CurrentPosition"]) # Update the value display for the current position
 
     
-    gui.window.after(10,main) # Rerun main() again after xxx milliseconds
+    gui.window.after(200,main) # Rerun main() again after xxx milliseconds
 
 # Define the function that will be rerun automatically on an interval by the plot animation. This runs separately and independantly from main()
 def update_plotting(i):
