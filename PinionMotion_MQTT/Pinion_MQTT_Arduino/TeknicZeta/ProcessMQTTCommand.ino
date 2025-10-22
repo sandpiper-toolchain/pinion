@@ -11,7 +11,7 @@ void ProcessMQTTCommand(String Topic, String Value) {
   // Diag_ComPort.println(Topic.substring(Topic.indexOf('/')+1));
 
   Value.replace(" ", "");  // Remove any spaces that might be in the value string.
-  if (programming_mode && Topic != "Commands/EndProgram") {
+  if (programming_mode && Topic != System_Name+"/Commands/EndProgram") {
     list_files();
     if (SD_files.indexOf(program_filename) > 0) {
       append_to_file(program_filename, ",");
@@ -24,15 +24,15 @@ void ProcessMQTTCommand(String Topic, String Value) {
     append_to_file(program_filename, Value);
     //Programming mode.  Write files to a JSON file on the SD card instead of executing this commands.
     Diag_ComPort.println("Writing Commands to SD Card");
-  } else if (Topic == "Commands/BeginProgram" && !programming_mode) {
+  } else if (Topic == System_Name+"/Commands/BeginProgram" && !programming_mode) {
     programming_mode = true;
     program_filename = Value + ".JSN";
     delete_file(program_filename);
-  } else if (Topic == "Commands/EndProgram") {
+  } else if (Topic == System_Name+"/Commands/EndProgram") {
     append_to_file(program_filename, "}");
     programming_mode = false;
     list_files();
-  } else if (Topic == "Commands/Enable") {
+  } else if (Topic == System_Name+"/Commands/Enable") {
     if (Value == "1" || Value == "True" || Value == "true") {
       motor0.EnableRequest(true);
       Diag_ComPort.println("Motor Enabled!");
@@ -42,64 +42,65 @@ void ProcessMQTTCommand(String Topic, String Value) {
       motor0.EnableRequest(true);
     }
 
-  } else if (Topic == "Commands/Disable") {
+  } else if (Topic == System_Name+"/Commands/Disable") {
     motor0.EnableRequest(false);
 
-  } else if (Topic == "Commands/SetAbsolutePosition") {
+  } else if (Topic == System_Name+"/Commands/SetAbsolutePosition") {
     Diag_ComPort.println(Value);
     new_position_ref = Value.toFloat();
     motor0.PositionRefSet(Scale_mm_to_Steps(new_position_ref));
 
-  } else if (Topic == "Commands/SetVelocity") {
+  } else if (Topic == System_Name+"/Commands/SetVelocity") {
     velocityLimit = Scale_Vel_mm_to_Steps(Value.toFloat());
     motor0.VelMax(velocityLimit);
     Diag_ComPort.println("Velocity Limit Set to "+String(velocityLimit)+" steps per second");
 
-  } else if (Topic == "Commands/SetAcceleration") {
+  } else if (Topic == System_Name+"/Commands/SetAcceleration") {
     accelerationLimit = Scale_Accel_mm_to_Steps(Value.toFloat());
     motor0.AccelMax(accelerationLimit);
     Diag_ComPort.println("Acceleration Limit Set to "+String(accelerationLimit)+" steps per second per second");
 
-  } else if (Topic == "Commands/MoveToAbsolutePosition") {
+  } else if (Topic == System_Name+"/Commands/MoveToAbsolutePosition") {
     MA = true;  // Move absolute = True
     position_commanded_mm = Value.toFloat();
     position_commanded_steps = Scale_mm_to_Steps(position_commanded_mm);
     Move(position_commanded_steps);
-  } else if (Topic == "Commands/RelativeMove") {
+
+  } else if (Topic == System_Name+"/Commands/RelativeMove") {
     MA = false;  // Move absolute = False
     position_commanded_mm = Value.toFloat();
     position_commanded_steps = Scale_mm_to_Steps(position_commanded_mm);
     Move(position_commanded_steps);
 
-  } else if (Topic == "Commands/Jog") {
+  } else if (Topic == System_Name+"/Commands/Jog") {
     VelocityMove(Scale_Vel_mm_to_Steps(Value.toFloat()));
     Diag_ComPort.println("Jog Move at Vel: "+Value+"mm/sec");
 
-  } else if (Topic == "Commands/StopMotion") {
+  } else if (Topic == System_Name+"/Commands/StopMotion") {
     // The Value doesn't matter in this case.  If this message is sent through, no matter what the payload is it will stop motion.
     motor0.MoveStopAbrupt();
 
-  } else if (Topic == "Commands/ClearFaults") {
+  } else if (Topic == System_Name+"/Commands/ClearFaults") {
     HandleAlerts();
 
-  } else if (Topic == "Commands/SetOutputIO/ConnectorIO_0") {
+  } else if (Topic == System_Name+"/Commands/SetOutputIO/ConnectorIO_0") {
     if (Value == "1" || Value == "True" || Value == "true") {
       ConnectorIO0.State(true);
     } else {
       ConnectorIO0.State(false);
     }
-  } else if (Topic == "Commands/SetOutputIO/ConnectorIO_1") {
+  } else if (Topic == System_Name+"/Commands/SetOutputIO/ConnectorIO_1") {
     if (Value == "1" || Value == "True" || Value == "true") {
       ConnectorIO1.State(true);
     } else {
       ConnectorIO1.State(false);
     }
-  } else if (Topic == "Commands/ListSDFiles") {
+  } else if (Topic == System_Name+"/Commands/ListSDFiles") {
     Diag_ComPort.print("List of Files on SD Card: ");
     Diag_ComPort.println(SD_files);
     // publish_mqtt_message_str("Commands/ListSDFiles",SD_files);
 
-  } else if (Topic == "Commands/Scale") {
+  } else if (Topic == System_Name+"/Commands/Scale") {
     SCLD = Value.toFloat();
 
   } else if (SD_files.indexOf(Topic.substring(Topic.indexOf('/')+1)) > 0) { // Check if the command is the name of a program on the SD card.

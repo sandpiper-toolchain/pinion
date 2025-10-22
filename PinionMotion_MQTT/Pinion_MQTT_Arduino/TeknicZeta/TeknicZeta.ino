@@ -4,13 +4,21 @@
 #include <Ethernet.h>
 #include <ArduinoMqttClient.h>
 
+const String System_Name = "2D Scanner";
+
+const String Sys_Desc = String("{\"System Name\":\"")+ String(System_Name)+"\""+
+                  ",\"Controller\":"+ "\"Teknic ClearCore\""+
+                  ",\"Number of Axes\":"+ "3"+
+                  ",\"Sensors\":"+"[\"Keyence\",\"Massa\"" 
+                  +"]}";
+
 // MAC address of the ClearCore
 byte mac[] = {};
 
 const char broker[] = "192.168.1.100";
 int        port     = 1883;
 // const char pub_topic[]  = "arduino/simple";
-const char sub_topic[]   = "Commands/#";
+String sub_topic   = System_Name+"/Commands/#";
 
 const long interval = 200;
 unsigned long previousMillis = 0;
@@ -35,6 +43,10 @@ MqttClient mqttClient(client);
 int mqtt_retries = 0;
 int max_mqtt_retries = 3;
 int count = 0;
+
+int dhcp_retries = 0;
+int max_dhcp_retries = 3;
+int dhcp_count = 0;
 
 int i = 0;
 bool verbose = false;
@@ -132,12 +144,8 @@ void loop() {
       String DAQ_String = "{\"x_position\":"+String(Scale_Steps_to_mm(motor0.PositionRefCommanded()))+
                           ",\"keyence_volts\":"+String(ConnectorA12.AnalogVoltage())+"}";
 
-      publish_mqtt_message_str("DAQ",DAQ_String);
-      // publish_mqtt_message_float("DAQ/x_position",Scale_Steps_to_mm(motor0.PositionRefCommanded())*1000);
-      // publish_mqtt_message_float("DAQ/keyence_volts",ConnectorA12.AnalogVoltage());
-      // Diag_ComPort.print(Scale_Steps_to_mm(motor0.PositionRefCommanded())*1000,2);
-      // Diag_ComPort.print(",");
-      // Diag_ComPort.println(ConnectorA12.AnalogVoltage(),6);
+      publish_mqtt_message_str(System_Name+"/DAQ",DAQ_String);
+
     }
 
   }

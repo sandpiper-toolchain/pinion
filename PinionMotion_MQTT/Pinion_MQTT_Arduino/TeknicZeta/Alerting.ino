@@ -38,7 +38,7 @@ void PrintAlerts() {
     Alerts_Str = Alerts_Str + "    MotorFaulted ";
   }
 
-  publish_mqtt_message_str("Alerts/x_axis", Alerts_Str);
+  publish_mqtt_message_str(System_Name+"/Alerts/x_axis", Alerts_Str);
 }
 //------------------------------------------------------------------------------
 

@@ -1,16 +1,4 @@
-void publish_mqtt_message_float(char topic[],float value){
-  mqttClient.beginMessage(topic);
-  mqttClient.print(value,4);
-  mqttClient.endMessage();
-}
-
-void publish_mqtt_message_int(char topic[],int value){
-  mqttClient.beginMessage(topic);
-  mqttClient.print(value);
-  mqttClient.endMessage();
-}
-
-void publish_mqtt_message_str(char topic[],String value){
+void publish_mqtt_message_str(String topic,String value){
   // Diag_ComPort.println(value.length());
   mqttClient.beginMessage(topic,value.length(),false,0,false); //payload,length,retained,qos,dup
   mqttClient.print(value);
@@ -38,5 +26,6 @@ void publish_status() {
   // Diag_ComPort.println(String(Scale_Steps_to_mm(motor0.PositionRefCommanded()),4));
   // Diag_ComPort.println(status_str);
   // Diag_ComPort.println(count++);
-  publish_mqtt_message_str("motion/x_axis/status",status_str);
+  // Diag_ComPort.println(System_Name+"/motion/x_axis/status");
+  publish_mqtt_message_str(System_Name+"/motion/x_axis/status",status_str);
 }

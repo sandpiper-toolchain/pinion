@@ -4,6 +4,8 @@ import ClearCore_MQTT
 import Pinion_StateMachine_MQTT
 import matplotlib.animation as animation
 
+System_Name = "2D Scanner"
+
 # Initialize and Configure the GUI.  Read in the config.json that contains com port IDs, scale factors, software limits, etc.
 gui = safl.gui('Project Pinion Demo GUI',icon='./pinion_feather_gear.ico')
 gui.add_tabs(['Main','Diagnostics'])
@@ -11,7 +13,7 @@ gui.add_frame(gui.tabs['Main'],'Status')
 gui.add_frame(gui.tabs['Main'],'Plots')
 
 # Initialize Motor Controllers and State Machine.
-x_axis = ClearCore_MQTT.ClearCoreMQTT_motion("192.168.1.100",1883,gui.configs["Keyence Scale"])
+x_axis = ClearCore_MQTT.ClearCoreMQTT_motion("192.168.1.100",1883,gui.configs["Keyence Scale"],System_Name=System_Name)
 # daq    = CleareCore_funcs.clearcore_daq(gui.configs['DAQ Com Port'],115200)
 statemachine = Pinion_StateMachine_MQTT.state_machine(x_axis,gui.configs['x limits'])
 
@@ -23,10 +25,6 @@ homing_button = safl.one_button(gui.frames['Status'],"Home Axis",statemachine.st
 x_jog_buttons = safl.jog_buttons(gui.frames['Status'],'Jog X',statemachine.start_position_move,statemachine.enter_neg_jog,statemachine.enter_pos_jog,statemachine.enter_standby) # Jogging interface
 plots = safl.xy_plot(gui.frames['Plots'],'Topography','mm','mm',['Keyence']) # live updating data plots
 
-
-# Populate initial values on the GUI
-# x_axis.poll_status()
-# x_jog_buttons.update_current_pos(x_axis.position)
 
 # Enable the drive:
 statemachine.enter_standby()

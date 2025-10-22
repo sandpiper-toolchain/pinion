@@ -16,9 +16,23 @@ void configure_MQTT() {
       Diag_ComPort.println(Ethernet.localIP());
     } else {
       Diag_ComPort.println("DHCP configuration was unsuccessful!");
-      while (true) {
-        // TCP will not work without a configured IP address
-        continue;
+
+      while (!dhcpSuccess && dhcp_count<max_dhcp_retries){
+        Diag_ComPort.println("Waiting 1 Second and Trying to Connect Again");
+        Diag_ComPort.print("Attempt ");
+        Diag_ComPort.print(dhcp_retries);
+        Diag_ComPort.print(" of ");
+        Diag_ComPort.println(max_dhcp_retries);
+        delay(1000);
+        dhcpSuccess = Ethernet.begin(mac);
+        dhcp_retries++;
+      }
+      if (!dhcpSuccess) {
+        Diag_ComPort.println("DHCP Still Failed.  Try Power Cycling the ClearCore.");
+        while (true) {
+          // TCP will not work without a configured IP address
+          continue;
+        }
       }
     }
   } else {
@@ -79,6 +93,13 @@ void configure_MQTT() {
 
     // subscribe to a topic
     mqttClient.subscribe(sub_topic);
+
+
+    //Publish System Description: 
+    mqttClient.beginMessage(System_Name+"/SystemDesc",Sys_Desc.length(),true,0,false); //payload,length,retained,qos,dup
+    mqttClient.print(Sys_Desc);
+    mqttClient.endMessage();
+
   } else {
     Diag_ComPort.print("Connection to MQTT broker Failed after ");
     Diag_ComPort.print(max_mqtt_retries);

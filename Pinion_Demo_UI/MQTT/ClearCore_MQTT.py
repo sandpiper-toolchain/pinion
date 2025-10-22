@@ -3,11 +3,13 @@ import json
 import numpy as np
 
 class ClearCoreMQTT_motion(): 
-    def __init__(self,broker_address:str,broker_port:int,scale_array):
+    def __init__(self,broker_address:str,broker_port:int,scale_array,System_Name):
+        self.System_Name = System_Name
         self.mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.mqttc.on_message = self.on_message
         self.mqttc.connect(broker_address,broker_port,60)
-        self.mqttc.subscribe("motion/x_axis/status")
+        self.mqttc.subscribe(System_Name+"/motion/x_axis/status")
+        self.mqttc.subscribe(System_Name+"/DAQ")
         self.mqttc.loop_start()
 
         # Set some default values
@@ -24,19 +26,19 @@ class ClearCoreMQTT_motion():
     # The callback for when a PUBLISH message is received from the server.
     def on_message(self,client, userdata, msg):
         # print(msg.topic+" "+str(msg.payload))
-        if msg.topic == "motion/x_axis/status":
+        if msg.topic == self.System_Name+"/motion/x_axis/status":
             self.status_array = json.loads(msg.payload)
             # print(self.status_array["ConnectorA12_Volts"])
-        elif msg.topic == "DAQ":
+        elif msg.topic == self.System_Name+"/DAQ":
             self.data_message = json.loads(msg.payload)
-            print(f"DAQ Data received: {self.data_message}")
+            # print(f"DAQ Data received: {self.data_message}")
             
             if "z_position" in self.data_message:
                 z_probe = self.data_message['z_position']
             else:
                 z_probe = 668
 
-            self.data_array.append([self.data_message[0],self.data_message[1]])
+            self.data_array.append([self.data_message['x_position'],self.data_message['keyence_volts']])
                         # convert the data_array to a numpy array so its easier to work with.
             self.data = np.asarray(self.data_array,dtype='float')
 
@@ -47,38 +49,38 @@ class ClearCoreMQTT_motion():
 
 
     def set_absolute_position(self,posn):
-        self.mqttc.publish("Commands/SetAbsolutePosition",posn)
+        self.mqttc.publish(self.System_Name+"/Commands/SetAbsolutePosition",posn)
 
     def set_velocity(self,vel):
-        self.mqttc.publish("Commands/SetVelocity",vel)
+        self.mqttc.publish(self.System_Name+"/Commands/SetVelocity",vel)
 
     def enable(self):
-        self.mqttc.publish("Commands/Enable",1)
+        self.mqttc.publish(self.System_Name+"/Commands/Enable",1)
     
     def disable(self):
-        self.mqttc.publish("Commands/Disable",0)
+        self.mqttc.publish(self.System_Name+"/Commands/Disable",0)
 
     def move_to_absolute_position(self,target):
-        self.mqttc.publish("Commands/MoveToAbsolutePosition",target)
+        self.mqttc.publish(self.System_Name+"/Commands/MoveToAbsolutePosition",target)
     
     def relative_move(self, dist):
-        self.mqttc.publish("Commands/RelativeMove",dist)
+        self.mqttc.publish(self.System_Name+"/Commands/RelativeMove",dist)
 
     def jog(self,vel):
-        self.mqttc.publish("Commands/Jog",vel)
+        self.mqttc.publish(self.System_Name+"/Commands/Jog",vel)
 
     def stop_motion(self):
-        self.mqttc.publish("Commands/StopMotion",0)
+        self.mqttc.publish(self.System_Name+"/Commands/StopMotion",0)
 
     def clear_faults(self):
-        self.mqttc.publish("Commands/ClearFaults")
-        self.mqttc.publish("Alerts/x_axis","OK")
+        self.mqttc.publish(self.System_Name+"/Commands/ClearFaults")
+        self.mqttc.publish(self.System_Name+"/Alerts/x_axis","OK")
 
     def SetOutputIO(self,connector_num,state:bool):
         if connector_num == 0:
-            self.mqttc.publish("Commands/SetOutputIO/ConnectorIO_0",state)
+            self.mqttc.publish(self.System_Name+"/Commands/SetOutputIO/ConnectorIO_0",state)
         elif connector_num == 1: 
-            self.mqttc.publish("Commands/SetOutputIO/ConnectorIO_1",state)
+            self.mqttc.publish(self.System_Name+"/Commands/SetOutputIO/ConnectorIO_1",state)
 
 if __name__ == "__main__":
     import time

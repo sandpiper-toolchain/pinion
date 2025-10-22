@@ -51,12 +51,12 @@ class state_machine():
             self.axis.jog(-self.axis.jog_vel)
         # STATE 2.2: Homing: Backing off the limit switch
         elif self.state == 2.1 and bool(self.axis.status_array['InNegativeLimit']) and not bool(self.axis.status_array['StepsActive']): # If we've made it to the negative limit switch.
-            print("At Limit.  Moving 10 mm off limit")
+            # print("At Limit.  Moving 10 mm off limit")
             self.state = 2.2
             self.axis.clear_faults()
             self.axis.set_velocity(10)
             self.axis.relative_move(10)
-            # time.sleep(0.5)
+            time.sleep(0.2)
         # STATE 2.3: Homing: Reapproach the limit switch even slower 
         elif self.state == 2.2 and not bool(self.axis.status_array['StepsActive']): # if finished backing off the limit switch
             self.axis.jog(-self.axis.jog_vel/2) # reapproach the limit switch at half the initial speed.
@@ -72,7 +72,7 @@ class state_machine():
         elif self.state == 3 and self.previous_state != 3:
             if self.axis.target >= self.axis_limits[0] and self.axis.target <= self.axis_limits[1]:
                 self.axis.move_to_absolute_position(self.axis.target)
-                self.data_array = [] # clear the logged data array at the beginning of each positional move
+                self.axis.data_array = [] # clear the logged data array at the beginning of each positional move
             else: 
                 safl.popup_warning("Commanded Move is outisde software limits",f'Commanded Move is outside of software limits: {self.axis_limits[0]}mm \u2192 {self.axis_limits[1]}mm')
                 print(f'Commanded move is outside of set limits: {self.axis_limits[0]}mm \u2192 {self.axis_limits[1]}mm')
